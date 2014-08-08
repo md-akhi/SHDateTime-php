@@ -3,55 +3,81 @@
 /** Software Hijri_Shamsi , Solar(Jalali) Date and Time
 Copyright(C)2014
 version 0.1 beta 
-/*	F	*/
+
+	/* Constants */
+	define("JDATE_ATOM" , "Y-m-d\TH:i:sP");
+	define("JDATE_COOKIE" , "l, d-M-y H:i:s T");
+	define("JDATE_ISO8601" , "Y-m-d\TH:i:s O");
+	define("JDATE_RFC822" , "D, d M y H:i:s O");
+	define("JDATE_RFC850" , "l, d-M-y H:i:s T");
+	define("JDATE_RFC1036" , "D, d M y H:i:s O");
+	define("JDATE_RFC1123 " , "D, d M Y H:i:s O");
+	define("JDATE_RFC2822" , "D, d M Y H:i:s O");
+	define("JDATE_RFC3339" , "Y-m-d\TH:i:sP");
+	define("JDATE_RSS" , "D, d M Y H:i:s O");
+	define("JDATE_W3C" , "Y-m-d\TH:i:sP");
+	
 class jdate {
 	
 	private $difftime = 0;
-	private $time_zone='';
-	private $lang ='fa';
-	private $ts = time();
-	
+	private $time_zone= '';
+	private $lang = '';
+	private $ts = array();
+
 	function set_timezone($time_zone)
 	{
-		if($this->time_zone != $time_zone)
-		{
-			$this->time_zone = $time_zone;
-			date_default_timezone_set($time_zone);
-		}
+		$this->time_zone = $time_zone!= 'Asia/Tehran' && !empty($time_zone) ? $time_zone : 'Asia/Tehran';
+		date_default_timezone_set($this->time_zone);
+	}
+	function get_timezone()
+	{
+		return $this->time_zone;
 	}
 
 	function set_lang($lang)
 	{
-		if($this->lang !=  $lang)
-			$this->lang =  $lang;
+		$this->lang =  $lang != 'fa' && !empty($lang) ? $lang : 'fa' ;
+	}
+	function get_lang()
+	{
+		return	$this->lang;
 	}
 
 	function set_diff_time($difftime)
 	{
 		$this->difftime =  $difftime;
 	}
-	
-	function set_timestamp($timestamp)
+	function get_diff_time()
 	{
-		$this->ts =  $timestamp;
+		return $this->difftime;
 	}
 
-	public function __constraction($time_zone='Asia/Tehran',$lang='fa',$difftime=0)
+	function set_timestamp($timestamp,$func)
 	{
-		self::set_timezone($time_zone);
-		self::set_diff_time($difftime);
-		self::set_lang($lang);
+		$this->ts[$func] =  $timestamp;
+		$this->ts[0] =  $timestamp;
+	}
+	function get_timestamp($timestamp,$func)
+	{
+		return $this->ts[$func];
 	}
 
-	public function date_format($format,$timestamp,$gmt=0)
+	public function __construct($lang='fa',$time_zone='Asia/Tehran',$difftime=0)
 	{
-		$ts=((empty($timestamp) || $timestamp==='now')?time():$timestamp)-($gmt?date("Z"):0);
-		$ts +=$this->difftime;
-		
-		$date=explode('_',date('H_i_j_n_O_P_s_w_Y',$ts));
-		list($j_y,$j_m,$j_d)=self::gregorian_to_jalali($date[8],$date[3],$date[2]);
+		$this->set_timezone($time_zone);
+		$this->set_diff_time($difftime);
+		$this->set_lang($lang);
+	}
+
+	private function date_format($format,$timestamp,$gmt=0)
+	{
+		if($gmt)date_default_timezone_set("UTC");
+		$ts=((empty($timestamp) || $timestamp==='now')?time():$timestamp)+self::get_diff_time();
+		$this->set_timestamp($ts,'date');
+		$date = explode('_',date('H_i_j_n_O_P_s_w_Y',$ts));
+		list($j_y,$j_m,$j_d) = self::gregorian_to_jalali($date[8],$date[3],$date[2]);
 		$doy=($j_m<7)?(($j_m-1)*31)+$j_d-1:(($j_m-7)*30)+$j_d+185;
-		$kab=($j_y%33%4-1==(int)($j_y%33*.05))?1:0;
+		$kab=($j_y%33%4-1===(int)($j_y%33*.05))?1:0;
 		$sl=strlen($format);
 		$out='';
 		for($i=0; $i<$sl; $i++)
@@ -68,9 +94,9 @@ class jdate {
 
 				/* day */
 				case'd':$out.=($j_d<10)?'0'.$j_d:$j_d;break;
-				case'D':$out.=self::words(array('kh'=>$date[7]),' ');break;
+				case'D':$out.=self::words('kh',$date[7]);break;
 				case'j':$out.=$j_d;break;
-				case'l':$out.=self::words(array('rh'=>$date[7]),' ');break;
+				case'l':$out.=self::words('rh',$date[7]);break;
 				case'S':$out.='ام';break;
 				case'w':$out.=($date[7]==6)?0:$date[7]+1;break;
 				case'N':$out.=$date[7]+1;break;
@@ -94,9 +120,9 @@ class jdate {
 				break;
 				
 				/* month */
-				case'F':$out.=self::words(array('mm'=>$j_m),' ');break;
+				case'F':$out.=self::words('mm',$j_m);break;
 				case'm':$out.=($j_m>9)?$j_m:'0'.$j_m;break;
-				case'M':$out.=self::words(array('km'=>$j_m),' ');break;
+				case'M':$out.=self::words('km',$j_m);break;
 				case'n':$out.=$j_m;break;
 				case't':$out.=($j_m!=12)?(31-(int)($j_m/6.5)):($kab+29);break;
 				
@@ -114,10 +140,7 @@ class jdate {
 				
 				/* full date/time */
 				case'c':$out.=$j_y.'/'.$j_m.'/'.$j_d.'T'.$date[0].':'.$date[1].':'.$date[6].$date[5];break;
-				case'r':
-				$key=self::words(array('rh'=>$date[7],'mm'=>$j_m));
-				$out.=$date[0].':'.$date[1].':'.$date[6].' '.$date[4]
-				.' '.$key['rh'].'، '.$j_d.' '.$key['mm'].' '.$j_y;
+				case'r':$out.=$date[0].':'.$date[1].':'.$date[6].' '.$date[4].' '.self::words('rh',$date[7]).'، '.$j_d.' '.self::words('mm',$j_m).' '.$j_y;
 				break;
 				case'U':$out.=$ts;break; 
 				
@@ -128,29 +151,31 @@ class jdate {
 				//---------------------------------------------------------------------------------------------------------------------------------------------
 				case'FC':$out.=(int)(($j_y+99)/100);break; 
 				case'Fb':$out.=(int)($j_m/3.1)+1;break; 
-				case'Ff':$out.=self::words(array('ff'=>$j_m),' ');break; 
-				case'FJ':$out.=self::words(array('rr'=>$j_d),' ');break;
+				case'Ff':$out.=self::words('ff',$j_m);break; 
+				case'FJ':$out.=self::words('rr',$j_d);break;
 				case'Fk';$out.=100-(int)($doy/($kab+365)*1000)/10;break;
 				case'FK':$out.=(int)($doy/($kab+365)*1000)/10;break;
-				case'Fp':$out.=self::words(array('mb'=>$j_m),' ');break; 
-				case'Fq':$out.=self::words(array('sh'=>$j_y),' ');break;
+				case'Fp':$out.=self::words('mb',$j_m);break; 
+				case'Fq':$out.=self::words("sh",$j_y);break;
 				case'FQ':$out.=$kab+364-$doy;break;
-				case'Fv': $out.=self::words(array('ss'=>substr($j_y,2,2)),' ');break; 
-				case'FV':$out.=self::words(array('ss'=>$j_y),' ');break;
+				case'Fv': $out.=self::words('ss',substr($j_y,2,2));break; 
+				case'FV':$out.=self::words('ss',$j_y);break;
 			 
 				default:$out.=$sub;
 			}
 		}
+		if($gmt)$this->set_timezone(self::get_timezone());
 		return $out;
 	}
 
-/*	F	*/
-	public function strftime($format,$timestamp='',$none='',$time_zone='Asia/Tehran',$num='fa')
+
+  	private function php_strftime($format,$timestamp='',$gmt=0)
 	{
-		 if($time_zone!='local')date_default_timezone_set(($time_zone=='')?'Asia/Tehran':$time_zone);
-		 $ts=$this->difftime+(($timestamp=='' or $timestamp=='now')?time(): self::num($timestamp));
+		if($gmt)date_default_timezone_set("UTC");
+		$ts=((empty($timestamp) || $timestamp==='now')?time():$timestamp)+self::get_diff_time();
+		$this->set_timestamp($ts,'strftime');
 		 $date=explode('_',date('h_H_i_j_n_s_w_Y',$ts));
-		 list($j_y,$j_m,$j_d)=$this->gregorian_to_jalali($date[7],$date[4],$date[3]);
+		 list($j_y,$j_m,$j_d)=self::gregorian_to_jalali($date[7],$date[4],$date[3]);
 		 $doy=($j_m<7)?(($j_m-1)*31)+$j_d-1:(($j_m-7)*30)+$j_d+185;
 		 $kab=($j_y%33%4-1==(int)($j_y%33*.05))?1:0;
 		 $sl=strlen($format);
@@ -170,11 +195,11 @@ class jdate {
 
 				/* Day */
 				case'a':
-				$out.=self::words(array('kh'=>$date[6]),' ');
+				$out.=self::words('kh',$date[6]);
 				break;
 
 				case'A':
-				$out.=self::words(array('rh'=>$date[6]),' ');
+				$out.=self::words('rh',$date[6]);
 				break;
 
 				case'd':
@@ -231,11 +256,11 @@ class jdate {
 				/* Month */
 				case'b':
 				case'h':
-				$out.=self::words(array('km'=>$j_m),' ');
+				$out.=self::words('km',$j_m);
 				break;
 
 				case'B':
-				$out.=self::words(array('mm'=>$j_m),' ');
+				$out.=self::words('mm',$j_m);
 				break;
 
 				case'm':
@@ -322,9 +347,8 @@ class jdate {
 
 				/* Time and Date Stamps */
 				case'c':
-				$key=self::words(array('rh'=>$date[6],'mm'=>$j_m));
 				$out.=$date[1].':'.$date[2].':'.$date[5].' '.date('P',$ts)
-				.' '.$key['rh'].'، '.$j_d.' '.$key['mm'].' '.$j_y;
+				.' '.self::words('rh',$date[6]).'، '.$j_d.' '.self::words('mm',$j_m).' '.$j_y;
 				break;
 
 				case'D':
@@ -359,65 +383,26 @@ class jdate {
 				default:$out.=$sub;
 			}
 		}
-		return($num!='en')? self::num($out,'fa','.'):$out;
+		if($gmt)$this->set_timezone(self::get_timezone());
+		return $out;
 	}
-
+   
 /*	F	*/
-	public function mktime($h='',$m='',$s='',$jm='',$jd='',$jy='',$is_dst=-1)
+	public function php_mktime($h,$m,$s,$jm,$jd,$jy,$is_dst,$gmt=0)
 	{
-		return _mktime( self::num($h), self::num($m), self::num($s), self::num($jm), self::num($jd), self::num($jy),$is_dst);
-	 }
-
-	public function gmmktime($h='',$m='',$s='',$jm='',$jd='',$jy='',$is_dst=-1)
-	{
-		return _mktime( self::num($h), self::num($m), self::num($s), self::num($jm), self::num($jd), self::num($jy),$is_dst,1);
-	 }
-
-	public function _mktime($h,$m,$s,$jm,$jd,$jy,$is_dst,$gmt=0)
-	{
-		if($h=='' and $m=='' and $s=='' and $jm=='' and $jd=='' and $jy=='')
-			return mktime()-($gmt?date("Z"):0);
+		if(empty($h) && empty($m) && empty($s) && empty($jm) && empty($jd) && empty($jy))
+		{
+			return $gmt ? gmmktime() : mktime();
+		}
 		else
 		{
-			list($year,$month,$day)=jalali_to_gregorian($jy,$jm,$jd);
-			return mktime($h,$m,$s,$month,$day,$year,$is_dst)-($gmt?date("Z"):0);
+			list($gy,$gm,$gd)=self::jalali_to_gregorian($jy,$jm,$jd);
+			return $gmt ? gmmktime($h,$m,$s,$gm,$gd,$gy,$is_dst) : mktime($h,$m,$s,$gm,$gd,$gy,$is_dst);
 		}
 	}
-
+		
 /*	F	*/
-	public function getdate($timestamp='',$none='',$tz='Asia/Tehran',$tn='en')
-	{
-		$ts=($timestamp=='')?time(): self::num($timestamp);
-		$jdate=explode('_',jdate('F_G_i_j_l_n_s_w_Y_z',$ts,'',$tz,$tn));
-		return array(
-			'seconds'=> self::num((int) self::num($jdate[6]),$tn),
-			'minutes'=> self::num((int) self::num($jdate[2]),$tn),
-			'hours'=>$jdate[1],
-			'mday'=>$jdate[3],
-			'wday'=>$jdate[7],
-			'mon'=>$jdate[5],
-			'year'=>$jdate[8],
-			'yday'=>$jdate[9],
-			'weekday'=>$jdate[4],
-			'month'=>$jdate[0],
-			0=> self::num($ts,$tn)
-		);
-	}
-
-/*	F	*/
-	public function checkdate($jm,$jd,$jy)
-	{
-		$jm= self::num($jm); $jd= self::num($jd); $jy= self::num($jy);
-		$l_d=($jm==12)?(($jy%33%4-1==(int)($jy%33*.05))?30:29):31-(int)($jm/6.5);
-		return($jm>0 and $jd>0 and $jy>0 and $jm<13 and $jd<=$l_d)?true:false;
-	}
-	public function gm()
-	{
-		$timeZone=timezone_open(date_default_timezone_get());
-		return timezone_offset_get($timeZone,date_create("now",$timeZone)); 
-	}
-/*	F	*/
-	public function num($str,$mod='en',$mf='٫')
+	public static function num($str,$mod='en',$mf='.')
 	{
 		$num_a=array('0','1','2','3','4','5','6','7','8','9','.');
 		$key_a=array('۰','۱','۲','۳','۴','۵','۶','۷','۸','۹',$mf);
@@ -425,72 +410,68 @@ class jdate {
 	}
 
 /*	F	*/
-	public function words($array,$mod='')
+	public function words($format,$num)
 	{
-		foreach($array as $type=>$num)
+		$sl=strlen($format);
+		$out='';
+		for($i=0; $i<$sl; $i+=2)
 		{
-			$num=(int) self::num($num);
-			switch($type)
+			$sub=substr($format,$i,2);
+			switch($sub)
 			{
 				case'ss':
 				include_once "class_num_to_str_OR_word.php";
 				new Num2Word($word,$num,'fa');
-				$array[$type] = $word;
+				$out.= $word;
+				unset($word);
 				break;
 
 				case'mm':
-				$keyf=array('','فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند');
-				$keye='';
-				$array[$type]=$keyf[$num];
+				$key=array('fa'=>array('','فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'),'en'=>array('','','','','','','','','','','','',''));
+				$out.=$key[self::get_lang()][$num];
 				break;
 
 				case'rr':
 				include_once "class_num_to_str_OR_word.php";
 				new Num2Word($word,$num,'fa');
-				$array[$type] = $word;
+				$out.= $word;
 				unset($word);
 				break;
 
 				case'rh':
-				$keyf=array('یکشنبه','دوشنبه','سه شنبه','چهارشنبه','پنجشنبه','جمعه','شنبه');
-				$keye='';
-				$array[$type]=$keyf[$num];
+				$key=array('fa'=>array('یکشنبه','دوشنبه','سه شنبه','چهارشنبه','پنجشنبه','جمعه','شنبه'),'en'=>array('','','','','','',''));
+				$out.=$key[self::get_lang()][$num];
 				break;
 
 				case'sh':
-				$keyf=array('مار','اسب','گوسفند','میمون','مرغ','سگ','خوک','موش','گاو','پلنگ','خرگوش','نهنگ');
-				$keye='';
-				$array[$type]=$keyf[$num%12];
+				$key=array('fa'=>array('مار','اسب','گوسفند','میمون','مرغ','سگ','خوک','موش','گاو','پلنگ','خرگوش','نهنگ'),'en'=>array('','','','','','',''));
+				$out.=$key[self::get_lang()][$num%12];
 				break;
 
 				case'mb':
-				$keyf=array('','حمل','ثور','جوزا','سرطان','اسد','سنبله','میزان','عقرب','قوس','جدی','دلو','حوت');
-				$keye='';
-				$array[$type]=$keyf[$num];
+				$keyf=array('fa'=>array('','حمل','ثور','جوزا','سرطان','اسد','سنبله','میزان','عقرب','قوس','جدی','دلو','حوت'),'en'=>array('','','','','','',''));
+				$out.=$key[self::get_lang()][$num];
 				break;
 
 				case'ff':
-				$keyf=array('بهار','تابستان','پاییز','زمستان');
-				$keye='';
-				$array[$type]=$keyf[(int)($num/3.1)];
+				$key=array('fa'=>array('بهار','تابستان','پاییز','زمستان'),'en'=>array('','','','','','',''));
+				$out.=$key[self::get_lang()][(int)($num/3.1)];
 				break;
 
 				case'km':
-				$keyf=array('','فر','ار','خر','تی‍','مر','شه‍','مه‍','آب‍','آذ','دی','به‍','اس‍');
-				$keye='';
-				$array[$type]=$keyf[$num];
+				$key=array('fa'=>array('','فر','ار','خر','تی‍','مر','شه‍','مه‍','آب‍','آذ','دی','به‍','اس‍'),'en'=>array('','','','','','',''));
+				$out.=$key[self::get_lang()][$num];
 				break;
 
 				case'kh':
-				$keyf=array('ی','د','س','چ','پ','ج','ش');
-				$keye='';
-				$array[$type]=$keyf[$num];
+				$key=array('fa'=>array('ی','د','س','چ','پ','ج','ش'),'en'=>array('','','','','','',''));
+				$out.=$key[self::get_lang()][$num];
 				break;
 
-				default:$array[$type]=$num;
+				default:$out.=$num;
 			}
 		}
-		 return($mod=='')?$array:implode($mod,$array);
+		 return $out;
 	}
 
 /** Convertor from and to Gregorian and Jalali (Hijri_Shamsi,Solar) public functions
@@ -499,7 +480,7 @@ Copyright(C)2011  */
 /*	F	*/
 	private static function gregorian_to_jalali($g_y,$g_m,$g_d,$mod='')
 	{
-		$g_y= self::num($g_y); $g_m= self::num($g_m); $g_d= self::num($g_d);/* <= :اين سطر ، جزء تابع اصلي نيست */
+		$g_y=self::num($g_y); $g_m=self::num($g_m); $g_d=self::num($g_d);/* <= :اين سطر ، جزء تابع اصلي نيست */
 		$d_4=$g_y%4;
 		//$g_a=array(0,31,59,90,120,151,181,212,243,273,304,334)[(int)$g_m-1];
 		$doy_g=(int)(($g_m<3) ? 30.5*$g_m-30 : (!($g_m>7)? 30.5*$g_m-32 : 30.5*$g_m-31.5))+$g_d;
@@ -536,7 +517,7 @@ Copyright(C)2011  */
 /*	F	*/
 	private static function jalali_to_gregorian($j_y,$j_m,$j_d,$mod='')
 	{
-		$j_y= self::num($j_y); $j_m= self::num($j_m); $j_d= self::num($j_d);/* <= :اين سطر ، جزء تابع اصلي نيست */
+		$j_y=self::num($j_y); $j_m=self::num($j_m); $j_d=self::num($j_d);/* <= :اين سطر ، جزء تابع اصلي نيست */
 		$d_4=($j_y+1)%4;
 		$doy_j=($j_m<7)?(($j_m-1)*31)+$j_d:(($j_m-7)*30)+$j_d+186;
 		$d_33=(int)((($j_y-55)%132)*.0305);
@@ -565,19 +546,148 @@ Copyright(C)2011  */
 		return($mod=='')?array($gy,$gm,$gd):$gy.$mod.$gm.$mod.$gd;
 	}
 	
-	public function date($format,$timestamp='',$time_zone='Asia/Tehran',$num='fa')
+	public function mktime($h='',$m='',$s='',$jm='',$jd='',$jy='',$is_dst=-1)
 	{
-		return self::num(self::date_format($format, $timestamp,$time_zone?:'Asia/Tehran'),$num);
-	}
-	public function gmdate($format,$timestamp='',$time_zone='Asia/Tehran',$num='fa')
-	{
-		return  self::num($this->date_format($format, $timestamp,$time_zone?:'Asia/Tehran',1),$num);
-	}
-}new jdate();
+		return self::num(self::php_mktime(self::num($h),self::num($m),self::num($s),self::num($jm),self::num($jd),self::num($jy),self::num($is_dst)),self::get_lang());
+	 }
 
-
-	function jdate($f='Y/n/d',$t='')
+	public function gmmktime($h='',$m='',$s='',$jm='',$jd='',$jy='',$is_dst=-1)
 	{
-		return jdate::date($f,$t);
+		return self::num(self::php_mktime(self::num($h),self::num($m),self::num($s),self::num($jm),self::num($jd),self::num($jy),self::num($is_dst),1),self::get_lang());
+	 }
+	public function getdate($timestamp='')
+	{
+		$ts=(empty($timestamp))?time():self::num($timestamp);
+		$jdate=self::num(explode('_',jdate('F_G_i_j_l_n_s_w_Y_z',$ts)));
+		return self::num(array(
+			'seconds'=>(int)$jdate[6],
+			'minutes'=>(int)$jdate[2],
+			'hours'=>$jdate[1],
+			'mday'=>$jdate[3],
+			'wday'=>$jdate[7],
+			'mon'=>$jdate[5],
+			'year'=>$jdate[8],
+			'yday'=>$jdate[9],
+			'weekday'=>$jdate[4],
+			'month'=>$jdate[0],
+			0=> $ts
+		),self::get_lang());
 	}
-	
+	public function gettimeofday($return_float=false)
+	{
+		list($usec,$sec) = explode(" ", microtime());
+		return self::num($return_float ? microtime(true)
+		:
+		self::num(array(
+		'sec'=>(int)$sec,
+		'usec'=>(int)floor($usec*1000000),
+		'minuteswest'=>self::num($this->date('Z'))/60*-1,
+		'minuteseast'=>self::num($this->date('Z'))/60,
+		'dsttime'=>(int)self::num($this->date('I'))
+		)),self::get_lang());
+	}
+	public function localtime($timestamp='',$is_associative=false)
+	{
+		$ts=(empty($timestamp))?time():self::num($timestamp);
+		$jdate=self::num(explode('_',jdate('G_i_I_j_n_s_w_Y_z',$ts)));
+		return $is_associative ? self::num(array(
+			'tm_sec'=>(int)$jdate[5],
+			'tm_min'=>(int)$jdate[1],
+			'tm_hour'=>$jdate[0],
+			'tm_mday'=>$jdate[3],
+			'tm_mon'=>$jdate[4]-1,
+			'tm_year'=>$jdate[7]-1300,
+			'tm_wday'=>$jdate[6],
+			'tm_yday'=>$jdate[8],
+			'tm_isdst'=>$jdate[2],
+		),self::get_lang()) 
+		:
+		self::num(array(
+			(int)$jdate[5],
+			(int)$jdate[1],
+			$jdate[0],
+			$jdate[3],
+			$jdate[4]-1,
+			$jdate[7]-1300,
+			$jdate[6],
+			$jdate[8],
+			$jdate[2],
+		),self::get_lang());
+	}
+	public static function checkdate($jm,$jd,$jy)
+	{
+		$jm=self::num($jm); $jd=self::num($jd); $jy=self::num($jy);
+		$l_d=($jm==12)?(($jy%33%4-1==(int)($jy%33*.05))?30:29):31-(int)($jm/6.5);
+		return ($jm>0 and $jd>0 and $jy>0 and $jm<13 and $jd<=$l_d);
+	}
+	public static function diff_gmt()
+	{
+		$timeZone=timezone_open(date_default_timezone_get());
+		return timezone_offset_get($timeZone,date_create("now",$timeZone))||date('Z'); 
+	}
+	public function strftime($format,$timestamp='')
+	{
+		if(!$format)return false;
+		return self::num($this->php_strftime($format,self::num($timestamp)),self::get_lang());
+	}
+	public function gmstrftime($format,$timestamp='')
+	{
+		if(!$format)return false;
+		return self::num($this->php_strftime($format,self::num($timestamp),1),self::get_lang());
+	}
+	public function date($format,$timestamp='')
+	{
+		if(!$format)return false;
+		return self::num($this->date_format($format, $timestamp),self::get_lang());
+	}
+	public function gmdate($format,$timestamp='')
+	{
+		if(!$format)return false;
+		return self::num($this->date_format($format, $timestamp,1),self::get_lang());
+	}
+}$_SERVER['jdatephp'] = new jdate();
+
+	function jdate($format,$timestamp='')
+	{
+		if(!$format)return false;
+		return $_SERVER['jdatephp']->date($format,$timestamp);
+	}
+	function jgmdate($format,$timestamp='')
+	{
+		if(!$format)return false;
+		return $_SERVER['jdatephp']->gmdate($format,$timestamp);
+	}
+	function jmktime($h='',$m='',$s='',$jm='',$jd='',$jy='',$is_dst=-1)
+	{
+		return $_SERVER['jdatephp']->mktime($h,$m,$s,$jm,$jd,$jy,$is_dst);
+	}
+	function jgmmktime($h='',$m='',$s='',$jm='',$jd='',$jy='',$is_dst=-1)
+	{
+		return $_SERVER['jdatephp']->gmmktime($h,$m,$s,$jm,$jd,$jy,$is_dst);
+	}
+	function jgetdate($timestamp='')
+	{
+		return $_SERVER['jdatephp']->getdate($timestamp);
+	}
+	function jstrftime($format,$timestamp='')
+	{
+		if(!$format)return false;
+		return $_SERVER['jdatephp']->strftime($format,$timestamp);
+	}
+	function jgmstrftime($format,$timestamp='')
+	{
+		if(!$format)return false;
+		return $_SERVER['jdatephp']->gmstrftime($format,$timestamp);
+	}
+	function jlocaltime($timestamp='',$is_associative=false)
+	{
+		return $_SERVER['jdatephp']->localtime($timestamp,$is_associative);
+	}
+	function jgettimeofday($return_float=false)
+	{
+		return $_SERVER['jdatephp']->gettimeofday($return_float);
+	}
+	function jcheckdate($jm,$jd,$jy)
+	{
+		return $_SERVER['jdatephp']->checkdate($jm,$jd,$jy);
+	}
