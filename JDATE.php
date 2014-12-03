@@ -7,7 +7,7 @@
 	* @link    http://md-amanalikhani.github.io | http://md.akhi.ir
 	* @copyright   Copyright (C) 2014 - 2020 Open Source Matters,Inc. All right timestamp reserved.
 	* @license http://www.php.net/license/3_0.txt  PHP License 3.0
-	* @version Release: 0.1.10
+	* @version Release: 0.5.10
 	*/	
 	define("JDATE_Diff_Timeserver",0);///////		اختلاف زمان با سرور
 	function jtime(){return time()+JDATE_Diff_Timeserver;}
