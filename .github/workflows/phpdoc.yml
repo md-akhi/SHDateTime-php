@@ -1,0 +1,4 @@
+- name: phpdoc-box-action
+  # You may pin to the exact commit or the version.
+  # uses: phpDocumentor/phar-ga@584cd8ba085c1a77d77f26aa26b6ae4712f408d8
+  uses: phpDocumentor/phar-ga@1.0.0
