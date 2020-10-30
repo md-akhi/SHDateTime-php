@@ -1,0 +1,2 @@
+- name: Update wiki with PHP project documentation
+  uses: impresscms-dev/phpdocs-wiki-update-action@v1.0.0
