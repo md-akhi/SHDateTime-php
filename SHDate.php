@@ -9,9 +9,9 @@
     * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
     * @version		Release: 2.0.0-alpha.1
     */
-	
-	
-	require_once(__DIR__."/SHBase.php");
+
+
+require_once(__DIR__."/SHBase.php");
 
 	class SHDate extends SHDateBase {
 		
@@ -78,8 +78,6 @@
         }
         
 		public static function isLeap($jy){
-			if(!self::is_num($jy))return false;
-			$jy = self::numval($jy);
 			return (bool)parent::isLeap($jy);
         }
         

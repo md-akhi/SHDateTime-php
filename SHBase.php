@@ -72,7 +72,7 @@
 		
 		const FIRST_DAY_OF_WEEK = SHDATE_FIRST_DAY_OF_WEEK;	//	0 = Saturday | 6 = Friday
 		
-		/*
+		/**
 		* @see SHDate::date
 		* @see SHDate::gmdate
 		**/
@@ -87,10 +87,11 @@
 				$ftstr = date($ftemp,$timestamp);
 			sscanf($ftstr,'%d=%d=%d=%d=%s',$gYear,$gMonth,$gDay,$gdow,$ftstr);
 			list($Hours,$hours,$minute,$second,$O,$P)=explode('=',$ftstr);
-			list($shYear,$shMonth,$shDay)=self::gregorianToSolar($gMonth,$gDay,$gYear);
+			list($shYear,$shMonth,$shDay)=self::gregoriantosolar($gMonth,$gDay,$gYear);
 			$shdow = self::gDayOfWeeks($gdow);//self::getDayOfWeek($shYear,$shMonth,$shDay);
 			$flen=strlen($format);
-			$string=''; 
+			$string='';
+			$shLeap=$shdoy=$shdiy=$iso_year=$iso_week=false;
 			for ($i=0; $i < $flen; $i++){
 				switch ($format[$i]){
 					case 'B':case 'u':case 'v':case 'e':case 'I':case 'T':case 'Z':
@@ -173,9 +174,11 @@
 							case 'C':$string .= self::getConstellationsFullNames($shMonth);break;
 							case 'A':$string .= self::getAnimalsFullNames($shYear);break;
 							case 'L':$string .= self::getLeapFullNames($shLeap);break;
+
 							case 'Y':$string .= self::toWord('+its',$shYear);break;
 							case 'M':$string .= self::toWord('+its',$shMonth);break;
 							case 'D':$string .= self::toWord('+its',$shDay);break;
+
 							//case 'n':$string .= self::new_year(date('Y',$timestamp),$this->TimeZone->getOffset($this->DateTime));break;
 							case 't':$string .= self::getMidSolstice($shMonth,$shDay);break;
 							default:$string .= $format[$i];break;
@@ -201,10 +204,11 @@
 				$ftstr = strftime($ftemp,$timestamp);
 			sscanf($ftstr,'%d=%d=%d=%d=%s',$gYear,$gMonth,$gDay,$gdow,$ftstr);
 			list($Hours,$k,$L,$l,$M,$R,$S,$T,$X,$z,$Z)=explode('=',$ftstr);
-			list($shYear,$shMonth,$shDay)=self::gregorianToSolar($gMonth,$gDay,$gYear);
+			list($shYear,$shMonth,$shDay)=self::gregoriantosolar($gMonth,$gDay,$gYear);
 			$shdow = self::gDayOfWeeks($gdow);//self::getDayOfWeek($shYear,$shMonth,$shDay);
 			$flen=strlen($format);
 			$string='';
+			$iso_year=$iso_week=false;
 			for ($i=0; $i < $flen; $i++){
 				if ($format[$i] == '%'){
 					$i++;
@@ -332,18 +336,18 @@
 
 			$FPCOMPOUND=array(
 				// COMPOUND
-				'CLFormat'=>"({$USymbols[DD]})\/({$USymbols[Mm]})\/({$USymbols[YY]}):({$USymbols[HH]}):({$USymbols[II]}):({$USymbols[SS]}){$USymbols[space]}({$USymbols[tzcorrection]})",
-				'EXIF'=>"({$USymbols[YY]}):({$USymbols[MM]}):({$USymbols[DD]}) ({$USymbols[HH]}):({$USymbols[II]}):({$USymbols[SS]})",
-				//'ISOyearISOweek'=> "({$USymbols[YY]})-?[w]({$USymbols[W]})",
-				'IyIwday'=>"({$USymbols[YY]})(-?)[w]({$USymbols[W]})(-?)([0-7]?)",
-				'MySQL'=>"({$USymbols[YY]})-({$USymbols[MM]})-({$USymbols[DD]}) ({$USymbols[HH]}):({$USymbols[II]}):({$USymbols[SS]})",
-				'MSSQL'=>"({$USymbols[hh]}):({$USymbols[II]}):({$USymbols[SS]})[:\.](\d+)({$USymbols[meridian]})", // TIME 12 Hour
-				'WDDX'=>"({$USymbols[YY]})-({$USymbols[MM]})-({$USymbols[DD]})[t]({$USymbols[HH]}):({$USymbols[II]}):({$USymbols[SS]})",
-				'SOAP'=>"({$USymbols[YY]})-({$USymbols[MM]})-({$USymbols[DD]})[t]({$USymbols[HH]}):({$USymbols[II]}):({$USymbols[SS]}){$USymbols[frac]}?({$USymbols[tzcorrection]})?",
-				//'XMLRPCCompact'=>"({$USymbols[YY]})({$USymbols[MM]})({$USymbols[DD]})[tT]({$USymbols[HH]})({$USymbols[II]})({$USymbols[SS]})",
-				'XMLRPC'=>"({$USymbols[YY]})({$USymbols[MM]})({$USymbols[DD]})[t]({$USymbols[HH]}):?({$USymbols[II]}):?({$USymbols[SS]})",
+				'CLFormat'=>"({$USymbols["DD"]})\/({$USymbols["Mm"]})\/({$USymbols["YY"]}):({$USymbols["HH"]}):({$USymbols["II"]}):({$USymbols["SS"]}){$USymbols["space"]}({$USymbols["tzcorrection"]})",
+				'EXIF'=>"({$USymbols["YY"]}):({$USymbols["MM"]}):({$USymbols["DD"]}) ({$USymbols["HH"]}):({$USymbols["II"]}):({$USymbols["SS"]})",
+				//'ISOyearISOweek'=> "({$USymbols["YY"]})-?[w]({$USymbols["W"]})",
+				'IyIwday'=>"({$USymbols["YY"]})(-?)[w]({$USymbols["W"]})(-?)([0-7]?)",
+				'MySQL'=>"({$USymbols["YY"]})-({$USymbols["MM"]})-({$USymbols["DD"]}) ({$USymbols["HH"]}):({$USymbols["II"]}):({$USymbols["SS"]})",
+				'MSSQL'=>"({$USymbols["hh"]}):({$USymbols["II"]}):({$USymbols["SS"]})[:\.](\d+)({$USymbols["meridian"]})", // TIME 12 Hour
+				'WDDX'=>"({$USymbols["YY"]})-({$USymbols["MM"]})-({$USymbols["DD"]})[t]({$USymbols["HH"]}):({$USymbols["II"]}):({$USymbols["SS"]})",
+				'SOAP'=>"({$USymbols["YY"]})-({$USymbols["MM"]})-({$USymbols["DD"]})[t]({$USymbols["HH"]}):({$USymbols["II"]}):({$USymbols["SS"]}){$USymbols["frac"]}?({$USymbols["tzcorrection"]})?",
+				//'XMLRPCCompact'=>"({$USymbols["YY"]})({$USymbols["MM"]})({$USymbols["DD"]})[tT]({$USymbols["HH"]})({$USymbols["II"]})({$USymbols["SS"]})",
+				'XMLRPC'=>"({$USymbols["YY"]})({$USymbols["MM"]})({$USymbols["DD"]})[t]({$USymbols["HH"]}):?({$USymbols["II"]}):?({$USymbols["SS"]})",
 				//'UTs'=>"@(-?\d+)",
-				'PostgreSQL'=>"({$USymbols[YY]})\.?({$USymbols[doy]})"
+				'PostgreSQL'=>"({$USymbols["YY"]})\.?({$USymbols["doy"]})"
 			);
 			$inttostr_gm = function($num,$type = 1){
 				return $type?array(1=>'jan','feb','mar','apr','may','jun','jul','aug','sep','sept','oct','nov','dec')[$num]:array(1=>'january','february','march','april','may','june','july','august','september','october','november','december')[$num];
@@ -359,36 +363,36 @@
 				$setCOMPOUND = 1;
 				switch(array_keys($PMatchCOMPOUND)[0]){
 					case 'CLFormat':
-						$shYear=$PMatchCOMPOUND[CLFormat][3];
-						$shMonth=$strtoint_jm($PMatchCOMPOUND[CLFormat][2]);
-						$shDay=$PMatchCOMPOUND[CLFormat][1];
-						list($gYear,$gMonth,$gDay)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-						$time_=str_replace($PMatchCOMPOUND[CLFormat][0],'',$time_);
-						$time=str_replace($shDay.'/'.$PMatchCOMPOUND[CLFormat][2].'/'.$shYear,$gDay.'/'.$gMonth.'/'.$gYear,$time);
+						$shYear=$PMatchCOMPOUND["CLFormat"][3];
+						$shMonth=$strtoint_jm($PMatchCOMPOUND["CLFormat"][2]);
+						$shDay=$PMatchCOMPOUND["CLFormat"][1];
+						list($gYear,$gMonth,$gDay)=self::solartogregorian($shYear,$shMonth,$shDay);
+						$time_=str_replace($PMatchCOMPOUND["CLFormat"][0],'',$time_);
+						$time=str_replace($shDay.'/'.$PMatchCOMPOUND["CLFormat"][2].'/'.$shYear,$gDay.'/'.$gMonth.'/'.$gYear,$time);
 						break;
 					case 'EXIF':
-						$shYear=$PMatchCOMPOUND[EXIF][1];
-						$shMonth=$PMatchCOMPOUND[EXIF][2];
-						$shDay=$PMatchCOMPOUND[EXIF][3];
-						list($gYear,$gMonth,$gDay)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-						$time_=str_replace($PMatchCOMPOUND[EXIF][0],'',$time_);
+						$shYear=$PMatchCOMPOUND["EXIF"][1];
+						$shMonth=$PMatchCOMPOUND["EXIF"][2];
+						$shDay=$PMatchCOMPOUND["EXIF"][3];
+						list($gYear,$gMonth,$gDay)=self::solartogregorian($shYear,$shMonth,$shDay);
+						$time_=str_replace($PMatchCOMPOUND["EXIF"][0],'',$time_);
 						$time=str_replace($shYear.':'.$shMonth.':'.$shDay,$gYear.':'.sprintf('%02d',$gMonth).':'.sprintf('%02d',$gDay),$time);
 						break;
 					case 'IyIwday':
-						$shYear=$PMatchCOMPOUND[IyIwday][1];
-						$jwoy=$PMatchCOMPOUND[IyIwday][3];
-						$shdow=isset($PMatchCOMPOUND[IyIwday][5])?$PMatchCOMPOUND[IyIwday][5]:1;
+						$shYear=$PMatchCOMPOUND["IyIwday"][1];
+						$jwoy=$PMatchCOMPOUND["IyIwday"][3];
+						$shdow=isset($PMatchCOMPOUND["IyIwday"][5])?$PMatchCOMPOUND["IyIwday"][5]:1;
 						list($shYear,$shMonth,$shDay)=self::getWeekOfDay($shYear,$jwoy,$shdow);
-						list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-						$time_=str_replace($PMatchCOMPOUND[IyIwday][0],'',$time_);
-						$time=str_replace($PMatchCOMPOUND[IyIwday][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
+						list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+						$time_=str_replace($PMatchCOMPOUND["IyIwday"][0],'',$time_);
+						$time=str_replace($PMatchCOMPOUND["IyIwday"][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
 						break;
 					case 'MySQL':
-						$shYear=$PMatchCOMPOUND[MySQL][1];
-						$shMonth=$PMatchCOMPOUND[MySQL][2];
-						$shDay=$PMatchCOMPOUND[MySQL][3];
-						list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-						$time_=str_replace($PMatchCOMPOUND[MySQL][0],'',$time_);
+						$shYear=$PMatchCOMPOUND["MySQL"][1];
+						$shMonth=$PMatchCOMPOUND["MySQL"][2];
+						$shDay=$PMatchCOMPOUND["MySQL"][3];
+						list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+						$time_=str_replace($PMatchCOMPOUND["MySQL"][0],'',$time_);
 						$time=str_replace($shYear.'-'.$shMonth.'-'.$shDay,$gYear.'/'.$gMonth.'/'.$gDay,$time);
 						break;
 					/* case 'MSSQL': //////  go to time by do not syntax
@@ -401,39 +405,39 @@
 						// change Y M D jalali to Y M D gregorian and set to time
 						break; */
 					case 'SOAP':
-						list($date,$time)=explode('t',$PMatchCOMPOUND[SOAP][0]);
-						$shYear=$PMatchCOMPOUND[SOAP][1];
-						$shMonth=$PMatchCOMPOUND[SOAP][2];
-						$shDay=$PMatchCOMPOUND[SOAP][3];
-						list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-						$time_=str_replace($PMatchCOMPOUND[SOAP][0],'',$time_);
+						list($date,$time)=explode('t',$PMatchCOMPOUND["SOAP"][0]);
+						$shYear=$PMatchCOMPOUND["SOAP"][1];
+						$shMonth=$PMatchCOMPOUND["SOAP"][2];
+						$shDay=$PMatchCOMPOUND["SOAP"][3];
+						list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+						$time_=str_replace($PMatchCOMPOUND["SOAP"][0],'',$time_);
 						$time=str_replace($date.'t',$gYear.'-'.sprintf('%02d',$gMonth).'-'.sprintf('%02d',$gDay).'T',$time);
 						break;
 					case 'WDDX':
-						list($date,$time)=explode('t',$PMatchCOMPOUND[WDDX][0]);
-						$shYear=$PMatchCOMPOUND[WDDX][1];
-						$shMonth=$PMatchCOMPOUND[WDDX][2];
-						$shDay=$PMatchCOMPOUND[WDDX][3];
-						list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-						$time_=str_replace($PMatchCOMPOUND[WDDX][0],'',$time_);
+						list($date,$time)=explode('t',$PMatchCOMPOUND["WDDX"][0]);
+						$shYear=$PMatchCOMPOUND["WDDX"][1];
+						$shMonth=$PMatchCOMPOUND["WDDX"][2];
+						$shDay=$PMatchCOMPOUND["WDDX"][3];
+						list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+						$time_=str_replace($PMatchCOMPOUND["WDDX"][0],'',$time_);
 						$time=str_replace($date.'t',$gYear.'-'.$gMonth.'-'.$gDay.'T',$time);
 						break;
 					case 'XMLRPC':
-						list($date,$time)=explode('t',$PMatchCOMPOUND[XMLRPC][0]);
-						$shYear=$PMatchCOMPOUND[XMLRPC][1];
-						$shMonth=$PMatchCOMPOUND[XMLRPC][2];
-						$shDay=$PMatchCOMPOUND[XMLRPC][3];
-						list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-						$time_=str_replace($PMatchCOMPOUND[XMLRPC][0],'',$time_);
+						list($date,$time)=explode('t',$PMatchCOMPOUND["XMLRPC"][0]);
+						$shYear=$PMatchCOMPOUND["XMLRPC"][1];
+						$shMonth=$PMatchCOMPOUND["XMLRPC"][2];
+						$shDay=$PMatchCOMPOUND["XMLRPC"][3];
+						list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+						$time_=str_replace($PMatchCOMPOUND["XMLRPC"][0],'',$time_);
 						$time=str_replace($date.'t',$gYear.sprintf('%02d',$gMonth).sprintf('%02d',$gDay).'T',$time);
 						break;
 					case 'PostgreSQL':
-						$shYear=$PMatchCOMPOUND[PostgreSQL][1];
-						$shdoy=$PMatchCOMPOUND[PostgreSQL][2];
+						$shYear=$PMatchCOMPOUND["PostgreSQL"][1];
+						$shdoy=$PMatchCOMPOUND["PostgreSQL"][2];
 						list($shYearn,$shMonth,$shDay)=self::getDaysOfDay($shYear,$shdoy-1);
-						list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYearn,$shMonth,$shDay);
-						$time_=str_replace($PMatchCOMPOUND[PostgreSQL][0],'',$time_);
-						$time=str_replace($PMatchCOMPOUND[PostgreSQL][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
+						list($gMonth,$gDay,$gYear)=self::solartogregorian($shYearn,$shMonth,$shDay);
+						$time_=str_replace($PMatchCOMPOUND["PostgreSQL"][0],'',$time_);
+						$time=str_replace($PMatchCOMPOUND["PostgreSQL"][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
 						break;
 					/* case 'UTs':
 						$now=$PMatchCOMPOUND[UTs][1];
@@ -447,28 +451,28 @@
 			$FPDATE=array(
 				// DATE
 				//Localized
-				//'AMMDD'=>"({$USymbols[MM]})(\/)({$USymbols[DD]})",
-				//'YYMMDD'=>"({$USymbols[YY]})?(\/)?({$USymbols[MM]})(\/)({$USymbols[DD]})",
-				//'FDYYMM'=>"({$USymbols[YY]})(-)({$USymbols[MM]})",
-				//'yMD'=>"({$USymbols[y]})(-)({$USymbols[MM]})(-)({$USymbols[DD]})",
-				//'YYMMDD'=>"({$USymbols[YY]})({$USymbols[MM]})({$USymbols[DD]})",
-				//'YYyyMMDD'=>"({$USymbols[YY]}|{$USymbols[yy]})([\-\/])?({$USymbols[MM]})([\-\/])?({$USymbols[DD]})?",
-				'signYYyyMMDD'=>"([+-]?)((?:{$USymbols[YY]}|{$USymbols[yy]}|{$USymbols[y]})?)([\-\/]?)({$USymbols[MM]})([\-\/]?)((?:{$USymbols[DD]})?)",
+				//'AMMDD'=>"({$USymbols["MM"]})(\/)({$USymbols["DD"]})",
+				//'YYMMDD'=>"({$USymbols["YY"]})?(\/)?({$USymbols["MM"]})(\/)({$USymbols["DD"]})",
+				//'FDYYMM'=>"({$USymbols["YY"]})(-)({$USymbols["MM"]})",
+				//'yMD'=>"({$USymbols["y"]})(-)({$USymbols["MM"]})(-)({$USymbols["DD"]})",
+				//'YYMMDD'=>"({$USymbols["YY"]})({$USymbols["MM"]})({$USymbols["DD"]})",
+				//'YYyyMMDD'=>"({$USymbols["YY"]}|{$USymbols["yy"]})([\-\/])?({$USymbols["MM"]})([\-\/])?({$USymbols["DD"]})?",
+				'signYYyyMMDD'=>"([+-]?)((?:{$USymbols["YY"]}|{$USymbols["yy"]}|{$USymbols["y"]})?)([\-\/]?)({$USymbols["MM"]})([\-\/]?)((?:{$USymbols["DD"]})?)",
 
-				//'DDMM.yy'=>"({$USymbols[DD]})([\.\t])({$USymbols[MM]})(\.)({$USymbols[yy]})",
-				'DDMMYYyy'=>"({$USymbols[DD]})([\.\t-])({$USymbols[MM]})([\.-])({$USymbols[YY]}|{$USymbols[yy]})",
+				//'DDMM.yy'=>"({$USymbols["DD"]})([\.\t])({$USymbols["MM"]})(\.)({$USymbols["yy"]})",
+				'DDMMYYyy'=>"({$USymbols["DD"]})([\.\t-])({$USymbols["MM"]})([\.-])({$USymbols["YY"]}|{$USymbols["yy"]})",
 
-				//'DDMm'=> "({$USymbols[DD]})([ \.\t-])({$USymbols[Mm]})",
-				//'MmYY'=>"({$USymbols[Mm]})([ \.\t-])({$USymbols[YY]})",
-				//'DDMmy'=>"({$USymbols[DD]})([ \.\t-]?)({$USymbols[Mm]})([ \.\t-]?)({$USymbols[y]})",
-				'DDMmYY'=>"({$USymbols[DD]})?([ \.\t-]?)({$USymbols[Mm]})([ \.\t-]?)({$USymbols[YY]}|{$USymbols[y]})?",
+				//'DDMm'=> "({$USymbols["DD"]})([ \.\t-])({$USymbols["Mm"]})",
+				//'MmYY'=>"({$USymbols["Mm"]})([ \.\t-])({$USymbols["YY"]})",
+				//'DDMmy'=>"({$USymbols["DD"]})([ \.\t-]?)({$USymbols["Mm"]})([ \.\t-]?)({$USymbols["y"]})",
+				'DDMmYY'=>"({$USymbols["DD"]})?([ \.\t-]?)({$USymbols["Mm"]})([ \.\t-]?)({$USymbols["YY"]}|{$USymbols["y"]})?",
 
-				//'YYMm'=>"({$USymbols[YY]})([ \.\t-])({$USymbols[Mm]})",
-				//'MmDD'=>"({$USymbols[Mm]})([ \.\t-])({$USymbols[DD]})(({$USymbols[daysuf]}|[,\.\t ])+)?",
-				'YYyMmD'=>"({$USymbols[YY]}|{$USymbols[y]})?([ \.\t-]?)({$USymbols[Mm]})([ \.\t-]?)({$USymbols[DD]})?[\,\.\t ]?({$USymbols[daysuf]})?[\,\.\t ]?",
+				//'YYMm'=>"({$USymbols["YY"]})([ \.\t-])({$USymbols["Mm"]})",
+				//'MmDD'=>"({$USymbols["Mm"]})([ \.\t-])({$USymbols["DD"]})(({$USymbols["daysuf"]}|[,\.\t ])+)?",
+				'YYyMmD'=>"({$USymbols["YY"]}|{$USymbols["y"]})?([ \.\t-]?)({$USymbols["Mm"]})([ \.\t-]?)({$USymbols["DD"]})?[\,\.\t ]?({$USymbols["daysuf"]})?[\,\.\t ]?",
 
-				//'YY'=>"({$USymbols[YY]})",
-				//'Mm'=>"({$USymbols[Mm]})"
+				//'YY'=>"({$USymbols["YY"]})",
+				//'Mm'=>"({$USymbols["Mm"]})"
 			);
 			foreach($FPDATE as $NPATTERN=>$VPATTERN)
 				if(preg_match('#'.$VPATTERN.'#',$time_,$preg_match))
@@ -487,163 +491,163 @@
 				for($IDATE=0;$IDATE<count($PMatchDATE);$IDATE++)
 					switch($PMatchDATEkeys[$IDATE]){
 						case 'signYYyyMMDD':
-							if(strlen($PMatchDATE[signYYyyMMDD][2])<4&&$PMatchDATE[signYYyyMMDD][3]=='-'&&$PMatchDATE[signYYyyMMDD][5]=='-'){
-								if(strlen($PMatchDATE[signYYyyMMDD][2])>2)// strlen($shYear)==3
-									$shYear=1000+$PMatchDATE[signYYyyMMDD][2];
-								elseif(strlen($PMatchDATE[signYYyyMMDD][2])==2)// strlen($shYear)==2
-									$shYear=$minjyear<=$PMatchDATE[signYYyyMMDD][2]?$SDATEcentury*100+$PMatchDATE[signYYyyMMDD][2]:($SDATEcentury+1)*100+$PMatchDATE[signYYyyMMDD][2];
-								elseif(strlen($PMatchDATE[signYYyyMMDD][2])<2)// strlen($shYear)==1
-									$shYear=(int)($jfy/10)*10+$PMatchDATE[signYYyyMMDD][2];
-								$shMonth=$PMatchDATE[signYYyyMMDD][4];
-								$shDay=$PMatchDATE[signYYyyMMDD][6];
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-								$time_=str_replace($PMatchDATE[signYYyyMMDD][0],'',$time_);
-								$time=str_replace($PMatchDATE[signYYyyMMDD][0],$gYear.'-'.$gMonth.'-'.$gDay,$time);
+							if(strlen($PMatchDATE["signYYyyMMDD"][2])<4&&$PMatchDATE["signYYyyMMDD"][3]=='-'&&$PMatchDATE["signYYyyMMDD"][5]=='-'){
+								if(strlen($PMatchDATE["signYYyyMMDD"][2])>2)// strlen($shYear)==3
+									$shYear=1000+$PMatchDATE["signYYyyMMDD"][2];
+								elseif(strlen($PMatchDATE["signYYyyMMDD"][2])==2)// strlen($shYear)==2
+									$shYear=$minjyear<=$PMatchDATE["signYYyyMMDD"][2]?$SDATEcentury*100+$PMatchDATE["signYYyyMMDD"][2]:($SDATEcentury+1)*100+$PMatchDATE["signYYyyMMDD"][2];
+								elseif(strlen($PMatchDATE["signYYyyMMDD"][2])<2)// strlen($shYear)==1
+									$shYear=(int)($jfy/10)*10+$PMatchDATE["signYYyyMMDD"][2];
+								$shMonth=$PMatchDATE["signYYyyMMDD"][4];
+								$shDay=$PMatchDATE["signYYyyMMDD"][6];
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+								$time_=str_replace($PMatchDATE["signYYyyMMDD"][0],'',$time_);
+								$time=str_replace($PMatchDATE["signYYyyMMDD"][0],$gYear.'-'.$gMonth.'-'.$gDay,$time);
 							}
-							elseif($PMatchDATE[signYYyyMMDD][3]=='-'&&$PMatchDATE[signYYyyMMDD][5]=='-'){
-								if($PMatchDATE[signYYyyMMDD][1])
-									$sign=$PMatchDATE[signYYyyMMDD][1];
-								$shYear=$PMatchDATE[signYYyyMMDD][2];
-								$shMonth=$PMatchDATE[signYYyyMMDD][4];
-								if($PMatchDATE[signYYyyMMDD][6])
-									$shDay=$PMatchDATE[signYYyyMMDD][6];
+							elseif($PMatchDATE["signYYyyMMDD"][3]=='-'&&$PMatchDATE["signYYyyMMDD"][5]=='-'){
+								if($PMatchDATE["signYYyyMMDD"][1])
+									$sign=$PMatchDATE["signYYyyMMDD"][1];
+								$shYear=$PMatchDATE["signYYyyMMDD"][2];
+								$shMonth=$PMatchDATE["signYYyyMMDD"][4];
+								if($PMatchDATE["signYYyyMMDD"][6])
+									$shDay=$PMatchDATE["signYYyyMMDD"][6];
 								else
 									$shDay=$jfd;
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-								$time_=str_replace($PMatchDATE[signYYyyMMDD][0],'',$time_);
-								$time=str_replace($PMatchDATE[signYYyyMMDD][0],$sign.sprintf('%04d',$gYear).'-'.$gMonth.'-'.$gDay,$time);
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+								$time_=str_replace($PMatchDATE["signYYyyMMDD"][0],'',$time_);
+								$time=str_replace($PMatchDATE["signYYyyMMDD"][0],$sign.sprintf('%04d',$gYear).'-'.$gMonth.'-'.$gDay,$time);
 						// change Y M D jalali to Y M D gregorian and set to time
 							}
-							elseif($PMatchDATE[signYYyyMMDD][3]=='/'&&$PMatchDATE[signYYyyMMDD][5]=='/'){
-								$shYear=$PMatchDATE[signYYyyMMDD][2];
-								$shMonth=$PMatchDATE[signYYyyMMDD][4];
-								$shDay=$PMatchDATE[signYYyyMMDD][6];
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-								$time_=str_replace($PMatchDATE[signYYyyMMDD][0],'',$time_);
-								$time=str_replace($PMatchDATE[signYYyyMMDD][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
+							elseif($PMatchDATE["signYYyyMMDD"][3]=='/'&&$PMatchDATE["signYYyyMMDD"][5]=='/'){
+								$shYear=$PMatchDATE["signYYyyMMDD"][2];
+								$shMonth=$PMatchDATE["signYYyyMMDD"][4];
+								$shDay=$PMatchDATE["signYYyyMMDD"][6];
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+								$time_=str_replace($PMatchDATE["signYYyyMMDD"][0],'',$time_);
+								$time=str_replace($PMatchDATE["signYYyyMMDD"][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
 						// change Y M D jalali to Y M D gregorian and set to time
 							}
-							elseif(!$PMatchDATE[signYYyyMMDD][1]&&!$PMatchDATE[signYYyyMMDD][3]&&!$PMatchDATE[signYYyyMMDD][5]&&strlen($PMatchDATE[signYYyyMMDD][2])>3 /* &&strlen($PMatchDATE[signYYyyMMDD][4])>1&&strlen($PMatchDATE[signYYyyMMDD][6])>1 */){
-								$shYear=$PMatchDATE[signYYyyMMDD][2];
-								$shMonth=$PMatchDATE[signYYyyMMDD][4];
-								$shDay=$PMatchDATE[signYYyyMMDD][6];
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-								$time_=str_replace($PMatchDATE[signYYyyMMDD][0],'',$time_);
-								$time=str_replace($PMatchDATE[signYYyyMMDD][0],$gYear.$gMonth.$gDay,$time);
+							elseif(!$PMatchDATE["signYYyyMMDD"][1]&&!$PMatchDATE["signYYyyMMDD"][3]&&!$PMatchDATE["signYYyyMMDD"][5]&&strlen($PMatchDATE["signYYyyMMDD"][2])>3 /* &&strlen($PMatchDATE["signYYyyMMDD"][4])>1&&strlen($PMatchDATE["signYYyyMMDD"][6])>1 */){
+								$shYear=$PMatchDATE["signYYyyMMDD"][2];
+								$shMonth=$PMatchDATE["signYYyyMMDD"][4];
+								$shDay=$PMatchDATE["signYYyyMMDD"][6];
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+								$time_=str_replace($PMatchDATE["signYYyyMMDD"][0],'',$time_);
+								$time=str_replace($PMatchDATE["signYYyyMMDD"][0],$gYear.$gMonth.$gDay,$time);
 						// change Y M D jalali to Y M D gregorian and set to time
 							}
-							elseif($PMatchDATE[signYYyyMMDD][3]&&!$PMatchDATE[signYYyyMMDD][5]){
+							elseif($PMatchDATE["signYYyyMMDD"][3]&&!$PMatchDATE["signYYyyMMDD"][5]){
 								$shYear=$jfy;
-								$shMonth=$PMatchDATE[signYYyyMMDD][2];
-								$shDay=$PMatchDATE[signYYyyMMDD][4].''.$PMatchDATE[signYYyyMMDD][6];
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-								$time_=str_replace($PMatchDATE[signYYyyMMDD][0],'',$time_);
-								$time=str_replace($PMatchDATE[signYYyyMMDD][0],$gMonth.'/'.$gDay,$time);
+								$shMonth=$PMatchDATE["signYYyyMMDD"][2];
+								$shDay=$PMatchDATE["signYYyyMMDD"][4].''.$PMatchDATE["signYYyyMMDD"][6];
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+								$time_=str_replace($PMatchDATE["signYYyyMMDD"][0],'',$time_);
+								$time=str_replace($PMatchDATE["signYYyyMMDD"][0],$gMonth.'/'.$gDay,$time);
 							}else
 								$errors='signYYyyMMDD';
 							break;
 						case 'DDMMYYyy':
-							if(strlen($PMatchDATE[DDMMYYyy][5])==4){
-								$shYear=$PMatchDATE[DDMMYYyy][5];
-								$shMonth=$PMatchDATE[DDMMYYyy][3];
-								$shDay=$PMatchDATE[DDMMYYyy][1];
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-								$time_=str_replace($PMatchDATE[DDMMYYyy][0],'',$time_);
-								$time=str_replace($PMatchDATE[DDMMYYyy][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
+							if(strlen($PMatchDATE["DDMMYYyy"][5])==4){
+								$shYear=$PMatchDATE["DDMMYYyy"][5];
+								$shMonth=$PMatchDATE["DDMMYYyy"][3];
+								$shDay=$PMatchDATE["DDMMYYyy"][1];
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+								$time_=str_replace($PMatchDATE["DDMMYYyy"][0],'',$time_);
+								$time=str_replace($PMatchDATE["DDMMYYyy"][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
 							}
-							elseif($PMatchDATE[DDMMYYyy][1]>24&&$PMatchDATE[DDMMYYyy][5]>60&&$PMatchDATE[DDMMYYyy][2]=='.'&&$PMatchDATE[DDMMYYyy][4]=='.'||strlen($PMatchDATE[DDMMYYyy][5])==2&&$PMatchDATE[DDMMYYyy][4]=='.'){
-								$shYear=$minjyear<=$PMatchDATE[DDMMYYyy][5]?$SDATEcentury*100+$PMatchDATE[DDMMYYyy][5]:($SDATEcentury+1)*100+$PMatchDATE[DDMMYYyy][5];
-								$shMonth=$PMatchDATE[DDMMYYyy][3];
-								$shDay=$PMatchDATE[DDMMYYyy][1];
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-								$time_=str_replace($PMatchDATE[DDMMYYyy][0],'',$time_);
-								$time=str_replace($PMatchDATE[DDMMYYyy][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
+							elseif($PMatchDATE["DDMMYYyy"][1]>24&&$PMatchDATE["DDMMYYyy"][5]>60&&$PMatchDATE["DDMMYYyy"][2]=='.'&&$PMatchDATE["DDMMYYyy"][4]=='.'||strlen($PMatchDATE["DDMMYYyy"][5])==2&&$PMatchDATE["DDMMYYyy"][4]=='.'){
+								$shYear=$minjyear<=$PMatchDATE["DDMMYYyy"][5]?$SDATEcentury*100+$PMatchDATE["DDMMYYyy"][5]:($SDATEcentury+1)*100+$PMatchDATE["DDMMYYyy"][5];
+								$shMonth=$PMatchDATE["DDMMYYyy"][3];
+								$shDay=$PMatchDATE["DDMMYYyy"][1];
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+								$time_=str_replace($PMatchDATE["DDMMYYyy"][0],'',$time_);
+								$time=str_replace($PMatchDATE["DDMMYYyy"][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
 							}
 							else
 								$errors='DDMMYYyy';
 							break;
 						case 'YYyMmD':
-							if($PMatchDATE[YYyMmD][2]=='-'&&$PMatchDATE[YYyMmD][4]=='-'){
-								if(strlen($PMatchDATE[YYyMmD][1])<2){
-									$shYearear=(int)($SDATEfyear/10)*10+$PMatchDATE[YYyMmD][1];
+							if($PMatchDATE["YYyMmD"][2]=='-'&&$PMatchDATE["YYyMmD"][4]=='-'){
+								if(strlen($PMatchDATE["YYyMmD"][1])<2){
+									$shYear=(int)($SDATEfyear/10)*10+$PMatchDATE["YYyMmD"][1];
 						// change Y M D jalali to Y M D gregorian and set to time
 								}
-								elseif(strlen($PMatchDATE[YYyMmD][1])==2){
-									$shYear=$minjyear<=$PMatchDATE[YYyMmD][1]?$SDATEcentury*100+$PMatchDATE[YYyMmD][1]:($SDATEcentury+1)*100+$PMatchDATE[YYyMmD][1];
+								elseif(strlen($PMatchDATE["YYyMmD"][1])==2){
+									$shYear=$minjyear<=$PMatchDATE["YYyMmD"][1]?$SDATEcentury*100+$PMatchDATE["YYyMmD"][1]:($SDATEcentury+1)*100+$PMatchDATE["YYyMmD"][1];
 						// change Y M D jalali to Y M D gregorian and set to time
 								}
-								elseif(strlen($PMatchDATE[YYyMmD][1])>3){
-									$shYearear=$PMatchDATE[YYyMmD][1];
+								elseif(strlen($PMatchDATE["YYyMmD"][1])>3){
+									$shYear=$PMatchDATE["YYyMmD"][1];
 						// change Y M D jalali to Y M D gregorian and set to time
 								}
-								elseif(strlen($PMatchDATE[YYyMmD][1])>2){
-									$shYearear=1000+$PMatchDATE[YYyMmD][1];
+								elseif(strlen($PMatchDATE["YYyMmD"][1])>2){
+									$shYear=1000+$PMatchDATE["YYyMmD"][1];
 						// change Y M D jalali to Y M D gregorian and set to time
 								}
-								$shMonthonth=$strtoint_jm($PMatchDATE[YYyMmD][3]);
-								$jday=$PMatchDATE[YYyMmD][5];
-								$time_=str_replace($PMatchDATE[YYyMmD][0],'',$time_);
-								$time=str_replace($PMatchDATE[YYyMmD][0],'',$time);
+								$shMonthonth=$strtoint_jm($PMatchDATE["YYyMmD"][3]);
+								$jday=$PMatchDATE["YYyMmD"][5];
+								$time_=str_replace($PMatchDATE["YYyMmD"][0],'',$time_);
+								$time=str_replace($PMatchDATE["YYyMmD"][0],'',$time);
 							}
-							elseif(strlen($PMatchDATE[YYyMmD][1])==4&&!$PMatchDATE[YYyMmD][5]){
-								if($PMatchDATE[YYyMmD][1])
-									$shYearear=$PMatchDATE[YYyMmD][1];
-								$shMonthonth=$strtoint_jm($PMatchDATE[YYyMmD][3]);
-								if($PMatchDATE[YYyMmD][5])
-									$jday=$PMatchDATE[YYyMmD][5];
-								$time_=str_replace($PMatchDATE[YYyMmD][0],'',$time_);
-								$time=str_replace($PMatchDATE[YYyMmD][0],'',$time);
+							elseif(strlen($PMatchDATE["YYyMmD"][1])==4&&!$PMatchDATE["YYyMmD"][5]){
+								if($PMatchDATE["YYyMmD"][1])
+									$shYear=$PMatchDATE["YYyMmD"][1];
+								$shMonthonth=$strtoint_jm($PMatchDATE["YYyMmD"][3]);
+								if($PMatchDATE["YYyMmD"][5])
+									$jday=$PMatchDATE["YYyMmD"][5];
+								$time_=str_replace($PMatchDATE["YYyMmD"][0],'',$time_);
+								$time=str_replace($PMatchDATE["YYyMmD"][0],'',$time);
 						// change Y M D jalali to Y M D gregorian and set to time
 							}
-							elseif(!$PMatchDATE[YY][1]&&!$PMatchDATE[YYyMmD][1]&&$PMatchDATE[YYyMmD][5]){
-								$shMonthonth=$strtoint_jm($PMatchDATE[YYyMmD][3]);
-								$jday=$PMatchDATE[YYyMmD][5];
-								if($PMatchDATE[YYyMmD][6])
-									$daysuf=$PMatchDATE[YYyMmD][6];
-								$time_=str_replace($PMatchDATE[YYyMmD][0],'',$time_);
-								$time=str_replace($PMatchDATE[YYyMmD][0],'',$time);
+							elseif(!$PMatchDATE["YY"][1]&&!$PMatchDATE["YYyMmD"][1]&&$PMatchDATE["YYyMmD"][5]){
+								$shMonthonth=$strtoint_jm($PMatchDATE["YYyMmD"][3]);
+								$jday=$PMatchDATE["YYyMmD"][5];
+								if($PMatchDATE["YYyMmD"][6])
+									$daysuf=$PMatchDATE["YYyMmD"][6];
+								$time_=str_replace($PMatchDATE["YYyMmD"][0],'',$time_);
+								$time=str_replace($PMatchDATE["YYyMmD"][0],'',$time);
 						// change Y M D jalali to Y M D gregorian and set to time
 							}
 							else
 								$errors='YYyMmD';
 							break;
 						case 'DDMmYY':
-							if(strlen($PMatchDATE[DDMmYY][5])==4&&!$PMatchDATE[DDMmYY][2]){
-								$shMonth=$strtoint_jm($PMatchDATE[DDMmYY][3]);
-								$shYear=$PMatchDATE[DDMmYY][5];
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$jfd);
-								$time_=str_replace($PMatchDATE[DDMmYY][0],'',$time_);
-								$time=str_replace($PMatchDATE[DDMmYY][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
+							if(strlen($PMatchDATE["DDMmYY"][5])==4&&!$PMatchDATE["DDMmYY"][2]){
+								$shMonth=$strtoint_jm($PMatchDATE["DDMmYY"][3]);
+								$shYear=$PMatchDATE["DDMmYY"][5];
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$jfd);
+								$time_=str_replace($PMatchDATE["DDMmYY"][0],'',$time_);
+								$time=str_replace($PMatchDATE["DDMmYY"][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
 							}
-							elseif(!$PMatchDATE[YY][1]&&!$PMatchDATE[DDMmYY][5]&&!$PMatchDATE[DDMmYY][4]){
-								$shDay=$PMatchDATE[DDMmYY][1];
-								$shMonth=$strtoint_jm($PMatchDATE[DDMmYY][3]);
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($d_year,$shMonth,$shDay);
-								$time_=str_replace($PMatchDATE[DDMmYY][0],'',$time_);
-								$time=str_replace($PMatchDATE[DDMmYY][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
+							elseif(!$PMatchDATE["YY"][1]&&!$PMatchDATE["DDMmYY"][5]&&!$PMatchDATE["DDMmYY"][4]){
+								$shDay=$PMatchDATE["DDMmYY"][1];
+								$shMonth=$strtoint_jm($PMatchDATE["DDMmYY"][3]);
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+								$time_=str_replace($PMatchDATE["DDMmYY"][0],'',$time_);
+								$time=str_replace($PMatchDATE["DDMmYY"][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
 							}
-							elseif($PMatchDATE[DDMmYY][5]&&$PMatchDATE[DDMmYY][3]&&$PMatchDATE[DDMmYY][1]){
-								$shDay=$PMatchDATE[DDMmYY][1];
-								$shMonth=$strtoint_jm($PMatchDATE[DDMmYY][3]);
-								$shYear=$PMatchDATE[DDMmYY][5];
-								list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$shMonth,$shDay);
-								$time_=str_replace($PMatchDATE[DDMmYY][0],'',$time_);
-								$time=str_replace($PMatchDATE[DDMmYY][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
+							elseif($PMatchDATE["DDMmYY"][5]&&$PMatchDATE["DDMmYY"][3]&&$PMatchDATE["DDMmYY"][1]){
+								$shDay=$PMatchDATE["DDMmYY"][1];
+								$shMonth=$strtoint_jm($PMatchDATE["DDMmYY"][3]);
+								$shYear=$PMatchDATE["DDMmYY"][5];
+								list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$shMonth,$shDay);
+								$time_=str_replace($PMatchDATE["DDMmYY"][0],'',$time_);
+								$time=str_replace($PMatchDATE["DDMmYY"][0],$gYear.'/'.$gMonth.'/'.$gDay,$time);
 							}
 							else
 								$errors='DDMmYY';
 							break;
 						case 'YY':
-							$shYear=$PMatchDATE[YY][1];
-							list($gMonth,$gDay,$gYear)=self::sloarToGregorian($shYear,$jfm,$jfd);
-							$time_=str_replace($PMatchDATE[YY][0],'',$time_);
-							$time=str_replace($PMatchDATE[YY][0],$gYear,$time);
+							$shYear=$PMatchDATE["YY"][1];
+							list($gMonth,$gDay,$gYear)=self::solartogregorian($shYear,$jfm,$jfd);
+							$time_=str_replace($PMatchDATE["YY"][0],'',$time_);
+							$time=str_replace($PMatchDATE["YY"][0],$gYear,$time);
 							break;
 						case 'Mm':
-							$shMonth=$strtoint_jm($PMatchDATE[Mm][1]);
-							list($gMonth,$gDay,$gYear)=self::sloarToGregorian($jfy,$shMonth,$jfd);
-							$time_=str_replace($PMatchDATE[Mm][0],'',$time_);
-							$time=str_replace($PMatchDATE[Mm][0],strlen($shMonth)<4?$inttostr_gm($gMonth):$inttostr_gm($gMonth,0),$time);
+							$shMonth=$strtoint_jm($PMatchDATE["Mm"][1]);
+							list($gMonth,$gDay,$gYear)=self::solartogregorian($jfy,$shMonth,$jfd);
+							$time_=str_replace($PMatchDATE["Mm"][0],'',$time_);
+							$time=str_replace($PMatchDATE["Mm"][0],strlen($shMonth)<4?$inttostr_gm($gMonth):$inttostr_gm($gMonth,0),$time);
 							break;
 					}
 			}
@@ -651,16 +655,16 @@
  			$FPTIME=array(
 				// TIME
 				//12 Hour
-				//'hhmeridian'=>"({$USymbols[hh]})({$USymbols[space]})?({$USymbols[meridian]})",
-				//'hhIImeridian'=>"({$USymbols[hh]})[\.:]({$USymbols[II]})({$USymbols[space]})?({$USymbols[meridian]})",
-				'hhIISSmeridian'=>"({$USymbols[hh]})([\.:]?)({$USymbols[II]})?([\.:]?)({$USymbols[SS]})?{$USymbols[space]}?({$USymbols[meridian]})",
+				//'hhmeridian'=>"({$USymbols["hh"]})({$USymbols["space"]})?({$USymbols["meridian"]})",
+				//'hhIImeridian'=>"({$USymbols["hh"]})[\.:]({$USymbols["II"]})({$USymbols["space"]})?({$USymbols["meridian"]})",
+				'hhIISSmeridian'=>"({$USymbols["hh"]})([\.:]?)({$USymbols["II"]})?([\.:]?)({$USymbols["SS"]})?{$USymbols["space"]}?({$USymbols["meridian"]})",
 				//24 Hour
-				//'HHII'=>"[tT]?({$USymbols[HH]})[\.:]?({$USymbols[II]})",
-				//'HHIISS'=>"[tT]?({$USymbols[HH]})[\.:]?({$USymbols[II]})[\.:]?({$USymbols[SS]})?",
-				//'HHIISStz'=>"[tT]?({$USymbols[HH]})[\.:]({$USymbols[II]})[\.:]({$USymbols[SS]}){$USymbols[space]}?({$USymbols[tz]}|{$USymbols[tzcorrection]})",
-				//'HHIISSfrac'=>"[tT]?({$USymbols[HH]})[\.:]({$USymbols[II]})[\.:]({$USymbols[SS]})({$USymbols[frac]})",
-				'HHIISSfractz'=>"[t]?({$USymbols[HH]})([\.:]?)({$USymbols[II]})([\.:]?)({$USymbols[SS]})?{$USymbols[frac]}?{$USymbols[space]}?({$USymbols[tz]}|{$USymbols[tzcorrection]})?",
-				'tz'=>"({$USymbols[tz]}|{$USymbols[tzcorrection]})"
+				//'HHII'=>"[tT]?({$USymbols["HH"]})[\.:]?({$USymbols["II"]})",
+				//'HHIISS'=>"[tT]?({$USymbols["HH"]})[\.:]?({$USymbols["II"]})[\.:]?({$USymbols["SS"]})?",
+				//'HHIISStz'=>"[tT]?({$USymbols["HH"]})[\.:]({$USymbols["II"]})[\.:]({$USymbols["SS"]}){$USymbols["space"]}?({$USymbols["tz"]}|{$USymbols["tzcorrection"]})",
+				//'HHIISSfrac'=>"[tT]?({$USymbols["HH"]})[\.:]({$USymbols["II"]})[\.:]({$USymbols["SS"]})({$USymbols["frac"]})",
+				'HHIISSfractz'=>"[t]?({$USymbols["HH"]})([\.:]?)({$USymbols["II"]})([\.:]?)({$USymbols["SS"]})?{$USymbols["frac"]}?{$USymbols["space"]}?({$USymbols["tz"]}|{$USymbols["tzcorrection"]})?",
+				'tz'=>"({$USymbols["tz"]}|{$USymbols["tzcorrection"]})"
 			);
 			foreach($FPTIME as $NPATTERN=>$VPATTERN)
 				if(preg_match('#'.$VPATTERN.'#',$time_,$preg_match)){
@@ -671,30 +675,30 @@
 				for($ITIME=0;$ITIME<count($PMatchTIME);$ITIME++)
 					switch($PMatchTIMEkeys[$ITIME]){
 						case 'hhIISSmeridian':
-						/* 	$hour=$PMatchTIME[hhIISSmeridian][1];
-							if($PMatchTIME[hhIISSmeridian][3])
-								$minute=$PMatchTIME[hhIISSmeridian][3];
-							if($PMatchTIME[hhIISSmeridian][5])
-								$second=$PMatchTIME[hhIISSmeridian][5];
-							$meridian=$PMatchTIME[hhIISSmeridian][6]; */
-							$time_=str_replace($PMatchDATE[hhIISSmeridian][0],'',$time_);
+						/* 	$hour=$PMatchTIME["hhIISSmeridian"][1];
+							if($PMatchTIME["hhIISSmeridian"][3])
+								$minute=$PMatchTIME["hhIISSmeridian"][3];
+							if($PMatchTIME["hhIISSmeridian"][5])
+								$second=$PMatchTIME["hhIISSmeridian"][5];
+							$meridian=$PMatchTIME["hhIISSmeridian"][6]; */
+							$time_=str_replace($PMatchDATE["hhIISSmeridian"][0],'',$time_);
 							break;
 						case 'HHIISSfractz':
 							//if(!$meridian){
-								/* $hour=$PMatchTIME[HHIISSfractz][1];
-								$minute=$PMatchTIME[HHIISSfractz][3];
-								if($PMatchTIME[HHIISSfractz][5])
-									$second=$PMatchTIME[HHIISSfractz][5];
-								if($PMatchTIME[HHIISSfractz][7])
-									$frac=$PMatchTIME[HHIISSfractz][7];
-								if($PMatchTIME[HHIISSfractz][8])
-									$tz=$PMatchTIME[HHIISSfractz][8]; */
-								$time_=str_replace($PMatchDATE[HHIISSfractz][0],'',$time_);
+								/* $hour=$PMatchTIME["HHIISSfractz"][1];
+								$minute=$PMatchTIME["HHIISSfractz"][3];
+								if($PMatchTIME["HHIISSfractz"][5])
+									$second=$PMatchTIME["HHIISSfractz"][5];
+								if($PMatchTIME["HHIISSfractz"][7])
+									$frac=$PMatchTIME["HHIISSfractz"][7];
+								if($PMatchTIME["HHIISSfractz"][8])
+									$tz=$PMatchTIME["HHIISSfractz"][8]; */
+								$time_=str_replace($PMatchDATE["HHIISSfractz"][0],'',$time_);
 							//}
 							break;
 						/* case 'tz':
-							$tz=$PMatchTIME[tz][1];
-							//$time_=str_replace($PMatchTIME[tz][0],'',$time_);
+							$tz=$PMatchTIME["tz"][1];
+							//$time_=str_replace($PMatchTIME["tz"][0],'',$time_);
 							break; */
 					}
 			}
@@ -717,17 +721,17 @@
 				//'lastdayof'=>"last day of",
 				'firstlastdayof'=>"(first|last) day of",
 
-				'lastdaynameof'=>"({$USymbols[ordinal]}){$USymbols[space]}{$USymbols[Dd]}{$USymbols[space]}of",
-				'numberunit'=>"({$USymbols[number]})({$USymbols[space]})?({$USymbols[unit]}|week)",
-				'ordinalunit'=>"({$USymbols[ordinal]})({$USymbols[unit]})",
+				'lastdaynameof'=>"({$USymbols["ordinal"]}){$USymbols["space"]}{$USymbols["Dd"]}{$USymbols["space"]}of",
+				'numberunit'=>"({$USymbols["number"]})({$USymbols["space"]})?({$USymbols["unit"]}|week)",
+				'ordinalunit'=>"({$USymbols["ordinal"]})({$USymbols["unit"]})",
 				'ago'=>"(ago)",
-				'dayname'=>"({$USymbols[Dd]})",
-				'reltextweek'=>"({$USymbols[Dd]}){$USymbols[space]}({$USymbols[reltext]}){$USymbols[space]}week",
+				'dayname'=>"({$USymbols["Dd"]})",
+				'reltextweek'=>"({$USymbols["Dd"]}){$USymbols["space"]}({$USymbols["reltext"]}){$USymbols["space"]}week",
 
 
-				'unit'=>"({$USymbols[unit]})",
-				'ordinal'=>"({$USymbols[ordinal]})",
-				'reltext'=>"({$USymbols[reltext]})"
+				'unit'=>"({$USymbols["unit"]})",
+				'ordinal'=>"({$USymbols["ordinal"]})",
+				'reltext'=>"({$USymbols["reltext"]})"
 			);
 			//$now=self::time($now); // set in DAY-BASED
 			//The timestamp which is used as a base for the calculation of relative dates.
@@ -783,22 +787,22 @@
 					return mktime();
 			list($hours,$minute,$second,$shYear,$shMonth,$shDay) = self::numval($hours,$minute,$second,$shYear,$shMonth,$shDay);
 			if($gmt)
-				$getdate = self::gmgetdate();
+				$getdate = self::getdate(false, true);
 			else
 				$getdate = self::getdate();
 			if(!is_numeric($hours))
-				$hours = $getdate[hours];
+				$hours = $getdate["hours"];
 			if(!is_numeric($minute))
-				$minute = $getdate[minutes];
+				$minute = $getdate["minutes"];
 			if(!is_numeric($second))
-				$second = $getdate[seconds];
-			if(!is_numeric($shYear))
-				$shYear = $getdate[year];
-			if(!is_numeric($shMonth))
-				$shMonth = $getdate[mon];
+				$second = $getdate["seconds"];
 			if(!is_numeric($shDay))
-				$shDay = $getdate[mday];
-			list($gMonth,$gDay,$gYear) = self::sloarToGregorian($shYear,$shMonth,$shDay);
+				$shDay = $getdate["mday"];
+			if(!is_numeric($shMonth))
+				$shMonth = $getdate["mon"];
+			if(!is_numeric($shYear))
+				$shYear = $getdate["year"];
+			list($gMonth,$gDay,$gYear) = self::solartogregorian($shYear,$shMonth,$shDay);
 			if($gmt)
 				return gmmktime($hours,$minute,$second,$gMonth,$gDay,$gYear);
 			return mktime($hours,$minute,$second,$gMonth,$gDay,$gYear);
@@ -833,27 +837,27 @@
 			switch($format){
 				/* day */
 				case 'j':
-				case 'd':return $getdate[mday];
+				case 'd':return $getdate["mday"];
 				/* month */
 				case 'n':
-				case 'm':return $getdate[mon];
+				case 'm':return $getdate["mon"];
 				/* time */
-				case 'w':return $getdate[wday];
-				case 'z':return $getdate[yday];
+				case 'w':return $getdate["wday"];
+				case 'z':return $getdate["yday"];
 				/* week */
-				case 'W':return self::getWeekOfYear($getdate[year],$getdate[mon],$getdate[mday])[1];
-				case 't':return self::getDaysInMonth($getdate[year],$getdate[mon]);
+				case 'W':return self::getWeekOfYear($getdate["year"],$getdate["mon"],$getdate["mday"])[1];
+				case 't':return self::getDaysInMonth($getdate["year"],$getdate["mon"]);
 				/* year */
-				case 'L':return self::isLeap($getdate[year]);
-				case 'y':return $getdate[year]%100;
-				case 'Y':return $getdate[year];
+				case 'L':return self::isLeap($getdate["year"]);
+				case 'y':return $getdate["year"]%100;
+				case 'Y':return $getdate["year"];
 				/* time */
 				case 'g':
-				case 'h':return $getdate[hours]%12?:12;
+				case 'h':return $getdate["hours"]%12?:12;
 				case 'G':
-				case 'H':return $getdate[hours];
-				case 'i':return $getdate[minutes];
-				case 's':return $getdate[seconds];
+				case 'H':return $getdate["hours"];
+				case 'i':return $getdate["minutes"];
+				case 's':return $getdate["seconds"];
 				/* timezone */
 				case 'I':
 				case 'Z':
@@ -877,7 +881,7 @@
 				sscanf(gmdate('n=j=Y=H=i=s=w=U',self::time($timestamp)),'%d=%d=%d=%d=%d=%d=%d=%d',$gMonth,$gDay,$gYear,$Hours,$minute,$second,$gdow,$timestamp);
 			else
 				list($second,$minute,$Hours,$gDay,$gdow,$gMonth,$gYear,$gdoy,$gdfn,$gmfn,$timestamp) = array_values(getdate(self::time($timestamp)));
-			list($shYear,$shMonth,$shDay)=self::gregorianToSolar($gMonth,$gDay,$gYear);
+			list($shYear,$shMonth,$shDay)=self::gregoriantosolar($gMonth,$gDay,$gYear);
 			$shdow = self::gDayOfWeeks($gdow);//self::getDayOfWeek($shYear,$shMonth,$shDay);
 			return array(
 			'seconds' => $second,
@@ -903,7 +907,7 @@
 		*/
 		public static function localtime($timestamp=false,$is_associative=false){
 			$localtime = localtime(self::time($timestamp),true);
-			list($shYear,$shMonth,$shDay) = self::gregorianToSolar($localtime['tm_mon']+1,$localtime['tm_mday'],$localtime['tm_year']+1900);
+			list($shYear,$shMonth,$shDay) = self::gregoriantosolar($localtime['tm_mon']+1,$localtime['tm_mday'],$localtime['tm_year']+1900);
 			if($is_associative)
 				return array(
 				'tm_sec' => $localtime['tm_sec'],
@@ -996,14 +1000,14 @@
 		*
 		*
 		*/
-		public static function dateToTime($hours=false,$minute=false,$second=false,$shYear=false,$shMonth=false,$shDay=false){
+		public static function dateToTime($hours=false,$minute=false,$second=false,$shDay=false,$shMonth=false,$shYear=false, $gmt=false){
 			if(!(is_numeric($hours)||is_numeric($minute)||is_numeric($second)||is_numeric($shYear)||is_numeric($shMonth)||is_numeric($shDay)))
 				if($gmt)
 					return gmmktime();
 				else
 					return mktime();
 			list($hours,$minute,$second,$shDay,$shMonth,$shYear) = self::numval($hours,$minute,$second,$shDay,$shMonth,$shYear);
-			$getdate = self::gmgetdate();
+			$getdate = self::getdate(false, true);
 			if(!is_numeric($hours))
 				$hours = $getdate['hours'];
 			if(!is_numeric($minute))
@@ -1021,7 +1025,7 @@
 			*	3600  = 60*60
 			*/
 			//	0	=	1348/10/11	00:00:00	=	1970/01/01	00:00:00
-			return self::numval(((($shYear-1)*365+self::isLeap($shYear,1)+self::doy($shYear,$shMonth,$shDay))*86400 /* 24*60*60 */)+($hours*3600 /* 60*60 */)+($minute*60)+$second-42531868800);
+			return self::numval(((($shYear-1)*365+self::isLeap($shYear,1)+self::getDayOfYear($shYear,$shMonth,$shDay))*86400 /* 24*60*60 */)+($hours*3600 /* 60*60 */)+($minute*60)+$second-42531868800);
 		}
 		
 		/**
@@ -1048,7 +1052,7 @@
 			$hours = $ts/3600%24;
 			$minute = $ts/60%60;
 			$second = $ts%60;
-			$gmmktime = self::gmmktime($hours,$minute,$second,(self::isLeap($shYear)?1375:1371),$shMonth,$shDay);
+			$gmmktime = self::mktime($hours,$minute,$second,$shDay,$shMonth,(self::isLeap($shYear)?1375:1371),true);
 			if($gmt)
 				return self::numval($shYear,$shMonth,$shDay,$hours,$minute,$second,$timestamp,$gmmktime);
 			$tz = date('Z',$gmmktime);
@@ -1072,7 +1076,7 @@
 		* @return  array  Solar date.
 		* @since   1.0.0
 		*/
-		protected static function gregorianToSolar($gMonth,$gDay,$gYear){
+		protected static function gregoriantosolar($gMonth,$gDay,$gYear){
 			// new and best convert gregorian to jalali // 0622/03/22 = 0001/01/01
 			if(!self::is_num($gMonth,$gDay,$gYear))return false;
 			//list($gMonth,$gDay,$gYear) = self::numval($gMonth,$gDay,$gYear);
@@ -1092,7 +1096,7 @@
 		* @return  array  Gregorian date.
 		* @since   1.0.0
 		*/
-		protected static function sloarToGregorian($shYear,$shMonth,$shDay){
+		protected static function solartogregorian($shYear,$shMonth,$shDay){
 			// new and best convert jalali to gregorian // 0001/01/01 = 0622/03/22
 			if(!self::is_num($shYear,$shMonth,$shDay))return false;
 			//list($shYear,$shMonth,$shDay) = self::numval($shYear,$shMonth,$shDay);
