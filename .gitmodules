@@ -1,0 +1,3 @@
+[submodule "docs"]
+	path = docs
+	url = https://github.com/md-akhi/SHDateTime-php.wiki.git

@@ -1,0 +1,7 @@
+/vendor/
+/composer.phar
+/z/
+/featur/
+/test/
+composer.lock
+phpDocumentor.phar
