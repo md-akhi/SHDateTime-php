@@ -3,5 +3,4 @@ composer.phar
 composer.lock
 phpDocumentor.phar
 /featur/
-/test/
 /z/
