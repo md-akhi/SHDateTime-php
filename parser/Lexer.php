@@ -1,5 +1,5 @@
 ﻿<?php
-class LexerConfig
+class SHLexerConfig
 {
     /** @var TokenDefn[] */
     private $definitions = [];
@@ -8,7 +8,7 @@ class LexerConfig
 	const SINGLE_QUOTE = '\'';
 	const COMMA = ',';
 	const DOT = '\.';
-	const SPACE = '[ \t]';
+	const SPACE = "\s";
 	const UNKNOWN_CHAR = '[^'.self::SPACE.self::DOT.']';
 
 	private $tokenDefinitions = [
@@ -188,11 +188,61 @@ class LexerConfig
 		"RD" => 'rd',
 		"TH" => 'th',
 		
+		// ********** common rules **********
+		
+		"THIS"      => 'this',
+		"OF"        => 'of',
+		"LAST"      => 'last',
+		"NEXT"      => 'next',
+		"NOW"       => 'now',
+		"AGO"       => 'ago',
+		"BEFORE"    => 'before',
+		"START"     => 'start',
+		"END"       => 'end',
+		"PREVIOUS"	=> 'previous',
+        
+		// ********** date rules ********** 
+
+		"SATURDAY"  => 'saturday|sat',
+		"SUNDAY"    => 'sunday|sun',
+		"MONDAY"    => 'monday|mon',
+		"TUESDAY"   => 'tuesday|tue',
+		"WEDNESDAY" => 'wednesday|wed',
+		"THURSDAY"  => 'thursday|thu',
+		"FRIDAY"    => 'friday|fri|weekend',
+
+		"HOUR"   => 'hours?',
+		"MINUTE" => 'minutes?|min|mins',
+		"DAY"    => 'days?',
+		"WEEKDAY"  => 'weekdays?',
+		"WEEK"   => 'weeks?',
+		"MONTH"  => 'months?|mons?',
+		"YEAR"   => 'years?',
+		"FORTNIGHT" => 'forth?night',
+
+		"TODAY"     => 'today',
+		"TOMORROW"  => 'tomorrow',
+		"TONIGHT"   => 'tonight',
+		"YESTERDAY" => 'yesterday',
+        
+        "FARVARDIN"     =>  'farvardin|far',
+        "ORDIBEHESHT"   =>  'ordibehesht|ord',
+        "KHORDAD"       =>  'khordad|kho',
+        "TIR"           =>  'tir',
+        "AMORDAD"       =>  'a?mordad|amo|mor',
+        "SHAHRIVAR"     =>  'shahrivar|sha',
+        "MEHR"          =>  'mehr?',
+        "ABAN"          =>  'aban?',
+        "AZAR"          =>  'azar?',
+        "DEY"           =>  'dey',
+        "BAHMAN"        =>  'bahman|bah',
+        "ESFAND"        =>  'es(f|p)and|esf|esp',
+        
 		// ********** time rules ********** 
 
 		"AT"       => 'at|@',
-		"AFTER"    => 'after',
-		"PAST"     => 'past',
+		"BACK"    => 'back',
+		"FRONT"     => 'front',
 		"AM" 	=> 'a'.self::DOT.'?m'.self::DOT.'?',
 		"PM" 	=> 'p'.self::DOT.'?m'.self::DOT.'?',
 
@@ -208,40 +258,19 @@ class LexerConfig
 		"SIGN_WEEK"  	=> 'w',
 
 		// ********** date rules ********** 
-		"JANUARY" => 'january|jan|i',
-		"FEBRUARY" => 'february|feb|ii',
-		"MARCH" => 'march|mar|iii',
-		"APRIL" => 'april|apr|iv',
-		"MAY" => 'may|v',
-		"JUNE" => 'june|jun|vi',
-		"JULY" => 'july|jul|vii',
-		"AUGUST" => 'august|aug|viii',
-		"SEPTEMBER" => 'september|sep|ix',
-		"OCTOBER" => 'october|oct|x',
-		"NOVEMBER" => 'november|nov|xi',
-		"DECEMBER" => 'december|dec|xii',
 
-		"SATURDAY"  => 'saturday|sat',
-		"SUNDAY"    => 'sunday|sun',
-		"MONDAY"    => 'monday|mon',
-		"TUESDAY"   => 'tuesday|tue',
-		"WEDNESDAY" => 'wednesday|wed',
-		"THURSDAY"  => 'thursday|thu',
-		"FRIDAY"    => 'friday|fri|weekend',
-
-		"HOUR"   => 'hours?|hr|hrs',
-		"MINUTE" => 'minutes?|min|mins',
-		"DAY"    => 'days?|dys',
-		"WEEKDAY"  => 'weekdays?|wkdys',
-		"WEEK"   => 'weeks?|wks',
-		"MONTH"  => 'months?|mons',
-		"YEAR"   => 'year'.self::SINGLE_QUOTE.'?s?|yrs',
-		"FORTNIGHT" => 'fortnight|forthnight',
-
-		"TODAY"     => 'today',
-		"TOMORROW"  => 'tomorrow|tmr',
-		"TONIGHT"   => 'tonight',
-		"YESTERDAY" => 'yesterday',
+        "INT_IV"        =>  'iv',   // 4
+        "INT_VIII"      =>  'viii', // 8
+        "INT_VII"       =>  'vii',  // 7
+        "INT_VI"        =>  'vi',   // 6
+        "INT_V"         =>  'v',    // 5
+        "INT_IX"        =>  'ix',   // 9
+        "INT_XII"       =>  'xii',  // 12
+        "INT_XI"        =>  'xi',   // 11
+        "INT_X"         =>  'x',    // 10
+        "INT_III"       =>  'iii',  // 3
+        "INT_II"        =>  'ii',   // 2
+        "INT_I"         =>  'i',    // 1
 
 		// ********** holiday specific **********
 
@@ -285,19 +314,6 @@ class LexerConfig
 		"SPRING" => 'springs?',
 		"SUMMER" => 'summers?',
 
-		// ********** common rules **********
-		
-		"THIS"      => 'this',
-		"THAT"      => 'that',
-		"LAST"      => 'last|final',
-		"NEXT"      => 'next',
-		"NOW"       => 'now|current',
-		"AGO"       => 'ago',
-		"BEFORE"    => 'before',
-		"BEGINNING" => 'beginn?ing',
-		"START"     => 'start',
-		"END"       => 'end',
-		"previous"	=> 'previous',
 
 		//"TZ"		=>	'\(?[A-Za-z]{3,6}\)?|[A-Z][a-z]+([_\/][A-Z][a-z]+)+',
 
@@ -311,10 +327,10 @@ class LexerConfig
     public function __construct()
     {
         foreach ($this->tokenDefinitions as $k => $v) {
-            // if ($v instanceof TokenDefn) {
+            // if ($v instanceof SHTokenDefn) {
             //     $this->addTokenDefinition($v);
             // } elseif (is_string($k) && is_string($v)) {
-                $this->addTokenDefinition(new TokenDefn($k, $v));
+                $this->addTokenDefinition(new SHTokenDefn($k, $v));
             // }
         }
     }
@@ -322,7 +338,7 @@ class LexerConfig
     /**
      * @param TokenDefn $tokenDefn
      */
-    public function addTokenDefinition(TokenDefn $tokenDefn)
+    public function addTokenDefinition(SHTokenDefn $tokenDefn)
     {
         $this->definitions[] = $tokenDefn;
     }
@@ -337,7 +353,7 @@ class LexerConfig
 }
 
 
-class TokenDefn
+class SHTokenDefn
 {
     /** @var string */
     protected $name;
@@ -395,7 +411,7 @@ class TokenDefn
 }
 
 
-class Token
+class SHToken
 {
     /** @var string */
     protected $name;
@@ -468,7 +484,7 @@ class Token
 }
 
 
-class Lexer
+class SHLexer
 {
     /** @var string */
     private $input;
@@ -489,7 +505,7 @@ class Lexer
     private $token;
 
     /**
-     * @param LexerConfig $config
+     * @param string $input
      */
     public function __construct($input)
     {
@@ -503,7 +519,7 @@ class Lexer
      *
      * @return Token[]
      */
-    public static function scan(LexerConfig $config, $input)
+    public static function scan(SHLexerConfig $config, $input)
     {
         $tokens = [];
         $offset = 0;
@@ -516,7 +532,7 @@ class Lexer
                     $str = $matches[0];
                     $len = strlen($str);
                     if (strlen($tokenDefinition->getName()) > 0) {
-                        $tokens[] = new Token($tokenDefinition->getName(), $str, $offset, $position);
+                        $tokens[] = new SHToken($tokenDefinition->getName(), $str, $offset, $position);
                         ++$position;
                     }
                     $input = substr($input, $len);
@@ -569,7 +585,7 @@ class Lexer
     {
         $this->input = $input;
         $this->reset();
-        $this->tokens = static::scan(new LexerConfig(), $input);
+        $this->tokens = static::scan(new SHLexerConfig(), $input);
     }
 
     public function reset()

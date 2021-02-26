@@ -9,9 +9,11 @@
     * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
     * @version		Release: 2.0.0-alpha.5
     */
-	require __DIR__ . '/vendor/autoload.php';
+	//require __DIR__ . '/vendor/autoload.php';
 	require_once(__DIR__."/Config.php");
 	require_once(__DIR__."/i18n/Word.php");
+	include_once(__DIR__."/parser/Parser.php");
+	
 
 	class SHDateBase extends SHDateWord{
 		//	Default Server
@@ -297,7 +299,24 @@
 		* @return int  A timestamp on success,FALSE otherwise.
 		* @since   2.0.0-alpha.5
 		*/
-		public static function strtotime($time_,$now=false){
+		public static function strtotime($time_,$now=false ,$tst=false){
+			if($tst){
+				if(is_bool($now))
+					$now = self::time();
+				$libDateTime = new SHParser($time_,$now);
+				return $libDateTime;
+			}
+
+
+
+
+
+
+
+
+
+
+
 			//	time_ = by del str step to step
 			//	time = convert jalali to gregorian
 			$time=$time_=preg_replace(array("/^\s+|\s+$/","/\s{2,}/","/[\t\r\n]/"),array('',' ','	'),strtolower($time_));
@@ -994,6 +1013,19 @@
 			list($hours,$minute,$second) = self::numval($hours,$minute,$second);
 			return !($hours<0||$hours>23||$minute<0||$minute>59||$second<0||$second>59);
 		}
+
+		/**
+		*
+		*
+		*/
+		public static function Revtime($hours,$minute,$second){
+			$time = ($hours*3600 /* 60*60 */)+($minute*60)+$second;
+			$hours = ($time/3600)%24;
+			$minute = ($time/60)%60;
+			$second = $time%60;
+			return array($hours,$minute,$second);
+		}
+
 		
 
 		/**
@@ -1206,7 +1238,7 @@
 		}
 
 		/**
-		*
+		* getRevDayOfYear
 		*
 		*/
 		protected static function getDaysOfDay($shYear,$doy){
@@ -1294,7 +1326,7 @@
 		}
 
 		/**
-		*
+		*	getRevWeekOfYear
 		*
 		*/
 		protected static function getWeekOfDay($shIsoYear,$isoWeek,$isoDay=1){
@@ -1421,3 +1453,59 @@
 	}
     class_alias("SHDateBase","SDateBase");
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Export_SHDateBase extends SHDateBase{
+	public static function getDaysInMonth($shYear,$shMonth){
+		return parent::getDaysInMonth($shYear,$shMonth);
+	}
+	
+	public static function time($timestamp=false,$tserver=false){
+		return parent::time($timestamp,$tserver);
+	}
+	
+	public static function getdate($timestamp=false, $gmt=false){
+		return parent::getdate($timestamp, $gmt);
+	}
+
+	public static function checktime($hours,$minute,$second){
+		return parent::checktime($hours,$minute,$second);
+	}
+
+	public static function Revtime($hours,$minute,$second){
+		return parent::Revtime($hours,$minute,$second);
+	}
+
+	public static function getDayOfWeek($shYear,$shMonth,$shDay,$FDOW = self::FIRST_DAY_OF_WEEK){
+		return parent::getDayOfWeek($shYear,$shMonth,$shDay,$FDOW);
+	}
+
+	public static function getDayOfYear($shYear=false,$shMonth,$shDay){
+		return parent::getDayOfYear($shYear,$shMonth,$shDay);
+	}
+
+	public static function getDaysOfDay($shYear,$doy){
+		return parent::getDaysOfDay($shYear,$doy);
+	}
+
+}

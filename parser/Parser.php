@@ -2,15 +2,22 @@
 
 
 require_once __DIR__.'/Lexer.php';
+require_once dirname(__DIR__).'/SHBase.php';
 
 
-class Parser
+class SHParser
 {
 
-	private $Lexer;
+	public $Lexer;
 
-	function __construct($srt){
-		$this->Lexer = new Lexer($srt);
+	function __construct($srt, $time = null){
+		if(empty($time)){
+			$time = $this->Date::time();
+		}
+		$this->time = $time;
+		$this->Lexer = new SHLexer($srt);
+		$this->Date = new Export_SHDateBase();
+		$this->setDateTime($time);
 		do{
 			if($this->CompoundFormats());
 			elseif($this->RelativeFormats());
@@ -19,12 +26,36 @@ class Parser
 		}while($this->nextToken());
 		//return $this->LibDateTime();
 	}
-	
+
+	function setDateTime($time){
+		$date = $this->Date::getdate($time);
+		$this->data['YEAR'] = $date['year'];
+		$this->data['MONTH'] = $date['mon'];
+		$this->data['DAY'] = $date['mday'];
+		$this->data['HOURS'] = $date['hours'];
+		$this->data['MINUTES'] = $date['minutes'];
+		$this->data['SECONDS'] = $date['seconds'];
+		//$this->data['DAY_OF_YEAR'] = $date['yday'];
+		//$this->data['DAY_OF_WEEK'] = $date['wday'];
+		//$this->data['TIMESTAMP'] = $date[0];
+		$this->data['DATE'] = $date;
+		$this->data['GDATE'] = getdate($time);
+
+	}
+
 	function isToken($token){
 		if(!is_null($this->Lexer->getLookahead())){
 			return $this->Lexer->getLookahead()->is($token);
 		}
 		return false;
+	}
+
+	function nameToken(){
+		return $this->Lexer->getLookahead()->getName();
+	}
+
+	function valueToken(){
+		return $this->Lexer->getLookahead()->getValue();
 	}
 	
 	function nextToken(){
@@ -78,30 +109,30 @@ class Parser
 
 	function CommonLogFormat(){
 		$pos = $this->getPosition();
-		if($this->Day_OptionalPrefix($day)){
+		if($this->dayOptionalPrefix($day)){
 			if($this->isToken('SLASH')){
 				$this->nextToken();
-				if($this->Month_TextualShort($month)){
+				if($this->monthTextualShort($month)){
 					if($this->isToken('SLASH')){
 						$this->nextToken();
-						if($this->Year4_MandatoryPrefix($year)){
+						if($this->year4MandatoryPrefix($year)){
 							if($this->isToken('COLON')){
 								$this->nextToken();
-								if($this->HH24($h24)){
+								if($this->hours24MandatoryPrefix($h24)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
-										if($this->Minute_MandatoryPrefix($min)){
+										if($this->minutesMandatoryPrefix($min)){
 											if($this->isToken('COLON')){
 												$this->nextToken();
-												if($this->Second_MandatoryPrefix($sec)){
-													if($this->Space()){
+												if($this->secondsMandatoryPrefix($sec)){
+													if($this->whiteSpace()){
 														if($this->TZCorrection()){
-															$this->tokens['YEAR_OF_Century'] = $year;
-															$this->tokens['MONTH_OF_YEAR'] = $month;
-															$this->tokens['DAY_OF_MONTH'] = $day;
-															$this->tokens['HOURS_OF_DAY'] = $h24;
-															$this->tokens['MINUTES_OF_HOUR'] = $min;
-															$this->tokens['SECONDS_OF_MINUTE'] = $sec;
+															$this->data['YEAR'] = $year;
+															$this->data['MONTH'] = $month;
+															$this->data['DAY'] = $day;
+															$this->data['HOURS'] = $h24;
+															$this->data['MINUTES'] = $min;
+															$this->data['SECONDS'] = $sec;
 															return true;
 														}
 													}
@@ -122,27 +153,27 @@ class Parser
 
 	function EXIF(){
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('COLON')){
 				$this->nextToken();
-				if($this->Month_MandatoryPrefix($month)){
+				if($this->monthMandatoryPrefix($month)){
 					if($this->isToken('COLON')){
 						$this->nextToken();
-						if($this->Day_MandatoryPrefix($day)){
-							if($this->Space()){
-								if($this->HH24($h24)){
+						if($this->dayMandatoryPrefix($day)){
+							if($this->whiteSpace()){
+								if($this->hours24MandatoryPrefix($h24)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
-										if($this->Minute_MandatoryPrefix($min)){
+										if($this->minutesMandatoryPrefix($min)){
 											if($this->isToken('COLON')){
 												$this->nextToken();
-												if($this->Second_MandatoryPrefix($sec)){
-													$this->tokens['YEAR_OF_Century'] = $year;
-													$this->tokens['MONTH_OF_YEAR'] = $month;
-													$this->tokens['DAY_OF_MONTH'] = $day;
-													$this->tokens['HOURS_OF_DAY'] = $h24;
-													$this->tokens['MINUTES_OF_HOUR'] = $min;
-													$this->tokens['SECONDS_OF_MINUTE'] = $sec;
+												if($this->secondsMandatoryPrefix($sec)){
+													$this->data['YEAR'] = $year;
+													$this->data['MONTH'] = $month;
+													$this->data['DAY'] = $day;
+													$this->data['HOURS'] = $h24;
+													$this->data['MINUTES'] = $min;
+													$this->data['SECONDS'] = $sec;
 													return true;
 												}
 											}
@@ -161,21 +192,21 @@ class Parser
 
 	function IsoYearWeekDay(){
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
 			}
 			if($this->isToken('SIGN_WEEK')){
 				$this->nextToken();
-				if($this->W($week)){
+				if($this->week53($week)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
 					}
-					if($this->int_1_to_7($dow)||$this->int_0($dow)){
-						$this->tokens['DAY_OF_WEEK'] = $dow;
+					if($this->int1To7($dow)||$this->int0($dow)){
+						$this->data['DAY_OF_WEEK'] = $dow;
 					}
-					$this->tokens['WEEK_OF_YEAR'] = $week;
-					$this->tokens['YEAR_OF_Century'] = $year;
+					$this->data['WEEK_OF_YEAR'] = $week;
+					$this->data['YEAR'] = $year;
 					return true;
 				}
 			}
@@ -186,27 +217,27 @@ class Parser
 
 	function MySQL(){
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
-				if($this->Month_MandatoryPrefix($month)){
+				if($this->monthMandatoryPrefix($month)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
-						if($this->Day_MandatoryPrefix($day)){
-							if($this->Space()){
-								if($this->HH24($h24)){
+						if($this->dayMandatoryPrefix($day)){
+							if($this->whiteSpace()){
+								if($this->hours24MandatoryPrefix($h24)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
-										if($this->Minute_MandatoryPrefix($min)){
+										if($this->minutesMandatoryPrefix($min)){
 											if($this->isToken('COLON')){
 												$this->nextToken();
-												if($this->Second_MandatoryPrefix($sec)){
-													$this->tokens['YEAR_OF_Century'] = $year;
-													$this->tokens['MONTH_OF_YEAR'] = $month;
-													$this->tokens['DAY_OF_MONTH'] = $day;
-													$this->tokens['HOURS_OF_DAY'] = $h24;
-													$this->tokens['MINUTES_OF_HOUR'] = $min;
-													$this->tokens['SECONDS_OF_MINUTE'] = $sec;
+												if($this->secondsMandatoryPrefix($sec)){
+													$this->data['YEAR'] = $year;
+													$this->data['MONTH'] = $month;
+													$this->data['DAY'] = $day;
+													$this->data['HOURS'] = $h24;
+													$this->data['MINUTES'] = $min;
+													$this->data['SECONDS'] = $sec;
 													return true;
 												}
 											}
@@ -225,13 +256,13 @@ class Parser
 
 	function PostgreSQL(){
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DOT')){
 				$this->nextToken();
 			}
 			if($this->dayOfYear($doy)){
-				$this->tokens['YEAR_OF_Century'] = $year;
-				$this->tokens['DAY_OF_YEAR'] = $doy;
+				$this->data['YEAR'] = $year;
+				$this->data['DAY_OF_YEAR'] = $doy;
 				return true;
 			}
 		}
@@ -241,31 +272,31 @@ class Parser
 
 	function SOAP(){
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
-				if($this->Month_MandatoryPrefix($month)){
+				if($this->monthMandatoryPrefix($month)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
-						if($this->Day_MandatoryPrefix($day)){
+						if($this->dayMandatoryPrefix($day)){
 							if($this->isToken('SIGN_TIME')){
 								$this->nextToken();
-								if($this->HH24($h24)){
+								if($this->hours24MandatoryPrefix($h24)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
-										if($this->Minute_MandatoryPrefix($min)){
+										if($this->minutesMandatoryPrefix($min)){
 											if($this->isToken('COLON')){
 												$this->nextToken();
-												if($this->Second_MandatoryPrefix($sec)){
+												if($this->secondsMandatoryPrefix($sec)){
 													if($this->fraction($frac)){
 														$this->TZCorrection();
-														$this->tokens['YEAR_OF_Century'] = $year;
-														$this->tokens['MONTH_OF_YEAR'] = $month;
-														$this->tokens['DAY_OF_MONTH'] = $day;
-														$this->tokens['HOURS_OF_DAY'] = $h24;
-														$this->tokens['MINUTES_OF_HOUR'] = $min;
-														$this->tokens['SECONDS_OF_MINUTE'] = $sec;
-														$this->tokens['FRAC'] = $frac;
+														$this->data['YEAR'] = $year;
+														$this->data['MONTH'] = $month;
+														$this->data['DAY'] = $day;
+														$this->data['HOURS'] = $h24;
+														$this->data['MINUTES'] = $min;
+														$this->data['SECONDS'] = $sec;
+														$this->data['FRAC'] = $frac;
 														return true;
 													}
 												}
@@ -287,11 +318,11 @@ class Parser
 		$pos = $this->getPosition();
 		if($this->isToken('AT')){
 			$this->nextToken();
-			if($this->sign_number($sign)){
-				$this->tokens['Sign_Timestamp'] = $sign;
+			if($this->signNumber($sign)){
+				$this->data['Sign_Timestamp'] = $sign;
 			}
-			if($this->number($int)){
-				$this->tokens['Timestamp'] = $int;
+			if($this->Number($int)){
+				$this->data['Timestamp'] = $int;
 				return true;
 			}
 		}
@@ -301,26 +332,26 @@ class Parser
 
 	function XMLRPC(){
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
-			if($this->Month_MandatoryPrefix($month)){
-				if($this->Day_MandatoryPrefix($day)){
+		if($this->year4MandatoryPrefix($year)){
+			if($this->monthMandatoryPrefix($month)){
+				if($this->dayMandatoryPrefix($day)){
 					if($this->isToken('SIGN_TIME')){
 						$this->nextToken();
-						if($this->hh12($h1t2)||$this->HH24($h1t2)){
+						if($this->hours12OptionalPrefix($h1t2)||$this->hours24MandatoryPrefix($h1t2)){
 							if($this->isToken('COLON')){
 								$this->nextToken();
 							}
-							if($this->Minute_MandatoryPrefix($min)){
+							if($this->minutesMandatoryPrefix($min)){
 								if($this->isToken('COLON')){
 									$this->nextToken();
 								}
-								if($this->Second_MandatoryPrefix($sec)){
-									$this->tokens['YEAR_OF_Century'] = $year;
-									$this->tokens['MONTH_OF_YEAR'] = $month;
-									$this->tokens['DAY_OF_MONTH'] = $day;
-									$this->tokens['HOURS_OF_DAY'] = $h1t2;
-									$this->tokens['MINUTES_OF_HOUR'] = $min;
-									$this->tokens['SECONDS_OF_MINUTE'] = $sec;
+								if($this->secondsMandatoryPrefix($sec)){
+									$this->data['YEAR'] = $year;
+									$this->data['MONTH'] = $month;
+									$this->data['DAY'] = $day;
+									$this->data['HOURS'] = $h1t2;
+									$this->data['MINUTES'] = $min;
+									$this->data['SECONDS'] = $sec;
 									return true;
 								}
 							}
@@ -335,28 +366,28 @@ class Parser
 
 	function WDDX(){
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
-				if($this->Month_OptionalPrefix($month)){
+				if($this->monthOptionalPrefix($month)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
-						if($this->Day_OptionalPrefix($day)){
+						if($this->dayOptionalPrefix($day)){
 							if($this->isToken('SIGN_TIME')){
 								$this->nextToken();
-								if($this->hh12($h12)){
+								if($this->hours12OptionalPrefix($h12)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
-										if($this->Minute_OptionalPrefix($min)){
+										if($this->minutesOptionalPrefix($min)){
 											if($this->isToken('COLON')){
 												$this->nextToken();
-												if($this->Second_OptionalPrefix($sec)){
-													$this->tokens['YEAR_OF_Century'] = $year;
-													$this->tokens['MONTH_OF_YEAR'] = $month;
-													$this->tokens['DAY_OF_MONTH'] = $day;
-													$this->tokens['HOURS_OF_DAY'] = $h12;
-													$this->tokens['MINUTES_OF_HOUR'] = $min;
-													$this->tokens['SECONDS_OF_MINUTE'] = $sec;
+												if($this->secondsOptionalPrefix($sec)){
+													$this->data['YEAR'] = $year;
+													$this->data['MONTH'] = $month;
+													$this->data['DAY'] = $day;
+													$this->data['HOURS'] = $h12;
+													$this->data['MINUTES'] = $min;
+													$this->data['SECONDS'] = $sec;
 													return true;
 												}
 											}
@@ -375,22 +406,27 @@ class Parser
 	
 	function MS_SQL(){ //hh ":" II ":" SS [.:] [0-9]+ meridian  |  in Time Formats
 		$pos = $this->getPosition();
-		if($this->hh12($h12)){
-			$this->tokens['HOURS_OF_DAY'] = $h12;
+		if($this->hours12OptionalPrefix($h12)){
 			if($this->isToken('COLON')){
 				$this->nextToken();
-				if($this->Minute_MandatoryPrefix($min)){
-					$this->tokens['MINUTES_OF_HOUR'] = $min;
+				if($this->minutesMandatoryPrefix($min)){
 					if($this->isToken('COLON')){
 						$this->nextToken();
-						if($this->Second_MandatoryPrefix($sec)){
-							$this->tokens['SECONDS_OF_MINUTE'] = $sec;
+						if($this->secondsMandatoryPrefix($sec)){
 							if($this->isToken('DOT')||$this->isToken('COLON')){
 								$this->nextToken();
-								if($this->number($frac)){
-									$this->tokens['FRAC'] = $frac;
-									if($this->meridian($str)){
-										$this->tokens['AM_PM'] = $str;
+								if($this->Number($frac)){
+									if($this->meridian($meridian)){
+										if($meridian){
+											$this->data['HOURS'] = $h12+12;
+										}
+										else{
+											$this->data['HOURS'] = $h12;
+										}
+										$this->data['MINUTES'] = $min;
+										$this->data['SECONDS'] = $sec;
+										$this->data['FRAC'] = $frac;
+										$this->data['AM_PM'] = $meridian;
 										return true;
 									}
 								}
@@ -404,86 +440,306 @@ class Parser
 		return false;
 	}
 
-
-
 	// ==============================================================================
 	// =================================   Relative   ===============================
 	// ==============================================================================
 	function RelativeFormats(){
-		
 		//Day-based Notations
-
 		if($this->isToken('NOW')){ // Now - this is simply ignored
-			time();
+			$this->setDateTime($this->time);
+			return true;
 		}	
-
-		if($this->isToken('TODAY')||$this->isToken('MIDNIGHT')){ // The time is set to 00:00:00	  
-			$hours = 0;
-			$min = 0;
-			$sec = 0;
+		elseif($this->isToken('TODAY')||$this->isToken('MIDNIGHT')){ // The time is set to 00:00:00	
+			$this->restTime();
+			return true;
 		}
-		
-
-		if($this->isToken('NOON')){ // The time is set to 12:00:00	
-			$hours = 12;
-			$min = 0;
-			$sec = 0;
+		elseif($this->isToken('NOON')){ // The time is set to 12:00:00
+			$this->restTime(12);
+			return true;
 		}	
-		
-		 
-
-		if($this->isToken('YESTERDAY')){ // Midnight of yesterday	
-			$day .= -1;
-			$hours = 0;
-			$min = 0;
-			$sec = 0;
+		elseif($this->isToken('YESTERDAY')){ // Midnight of yesterday
+			$this->data['DAY'] -= 1;
+			$this->restTime();
+			return true;
 		}
-		
-		if($this->isToken('TOMORROW')){ // Midnight of tomorrow	
-			$day .= +1;
-			$hours = 0;
-			$min = 0;
-			$sec = 0;
-		}	 
-		/*
-		'back of' hour	
-		15 minutes past the specified hour	"back of 7pm", "back of 15"
-
-		'front of' hour	
-		15 minutes before the specified hour	"front of 5am", "front of 23"
-
-		'first day of'	
-		Sets the day of the first of the current month. This phrase is best used together with a month name following it.	"first day of January 2008"
-
-		'last day of'	
-		Sets the day to the last day of the current month. This phrase is best used together with a month name following it.	"last day of next month"
-
-		$this->ordinal() $this->space() $this->dayname() $this->space() 'of'	
-		Calculates the x-th week day of the current month.	"first sat of July 2008"
-
-		'last' space $this->dayname() $this->space() 'of'	
-		Calculates the last week day of the current month.	"last sat of July 2008"
-
-		$this->number() space? ($this->unit() | 'week')	
-		Handles relative time items where the value is a number.	"+5 weeks", "12 day", "-7 weekdays"
-
-		$this->ordinal() $this->space() $this->unit()	
-		Handles relative time items where the value is text.	"fifth day", "second month"
-
-		'ago'	
-		Negates all the values of previously found relative time items.	"2 days ago", "8 days ago 14:00", "2 months 5 days ago", "2 months ago 5 days", "2 days ago"
-
-		if($this->dayname()){ // Moves to the next day of this name.	"Monday"
-
+		elseif($this->isToken('TOMORROW')){ // Midnight of tomorrow	
+			$this->data['DAY'] += 1;
+			$this->restTime();
+			return true;
 		}
-		
-
-		$this->reltext() space 'week'	
-		Handles the special format "weekday + last/this/next week".	"Monday next week"
-		*/
-
+		elseif($this->minutes15SpecifiedHour()){
+			return true;
+		}
+		elseif($this->setDayOfMonth()){
+			return true;
+		}
+		elseif($this->setWeekDayOfMonth()){
+			return true;
+		}/*
+		elseif($this->handleRelativeTimeNumber()){
+			return true;
+		}
+		elseif($this->handleRelativeTimeText()){
+			return true;
+		}
+		elseif($this->isToken('ago')){ // Negates all the values of previously found relative time items.
+			$this->nextToken();
+			return true;
+		}*/
+		elseif($this->dayNeme($dow)){ // Moves to the next day of this name.	"Monday"
+			$this->data['DAY_OF_WEEK'] = $dow;
+			return true;
+		}
+		elseif($this->handleRelativeTimeFormat()){
+			return true;
+		}
+		return false;
 	}
 
+	function minutes15SpecifiedHour(){
+		$pos = $this->getPosition();
+		if($this->isToken('BACK')){ // 15 minutes past the specified hour
+			$this->nextToken();
+			if($this->whiteSpace()){
+				if($this->isToken('OF')){
+					$this->nextToken();
+					if($this->whiteSpace()){
+						if($this->Hour12Notation()||$this->hours24MandatoryPrefix($h24)){
+							if(!is_numeric($h24)){
+								$h24 = $this->data['HOURS'];
+							}
+							$this->data['HOURS'] = $h24;
+							$this->data['MINUTES'] = 15;
+							$this->data['SECONDS'] = 0;
+							return true;
+						}
+					}
+				}
+			}
+		}
+		elseif($this->isToken('FRONT')){ // 15 minutes before the specified hour
+			$h24 = false;
+			$this->nextToken();
+			if($this->whiteSpace()){
+				if($this->isToken('OF')){
+					$this->nextToken();
+					if($this->whiteSpace()){
+						if($this->Hour12Notation()||$this->hours24MandatoryPrefix($h24)){
+							if(!is_numeric($h24)){
+								$h24 = $this->data['HOURS'];
+							}
+							$this->data['HOURS'] = $h24-1;
+							$this->data['MINUTES'] = 45;
+							$this->data['SECONDS'] = 0;
+							if(!$this->Date->checktime($h24-1,45,0)){
+								$this->data['HOURS'] = $this->Date->Revtime($h24-1,45,0)[0];
+							}
+							return true;
+						}
+					}
+				}
+			}
+		}
+		$this->resetPosition($pos);
+		return false;
+	}
+
+	function setDayOfMonth(){
+		$pos = $this->getPosition();
+		if($this->isToken('FIRST')){ // Sets the day of the first of the current month. This phrase is best used together with a month name following it.
+			$this->nextToken();
+			if($this->whiteSpace()){
+				if($this->isToken('DAY')){
+					$this->nextToken();
+					if($this->whiteSpace()){
+						if($this->isToken('OF')){
+							$this->nextToken();
+							if($this->whiteSpace()){
+								if($this->RelativeFormats()||$this->DateFormats()){
+									$this->data['DAY'] = 1;
+									$this->data['HOURS'] = 0;
+									$this->data['MINUTES'] = 0;
+									$this->data['SECONDS'] = 0;
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		elseif($this->isToken('LAST')){ // Sets the day to the last day of the current month. This phrase is best used together with a month name following it.
+			$this->nextToken();
+			if($this->whiteSpace()){
+				if($this->isToken('DAY')){
+					$this->nextToken();
+					if($this->whiteSpace()){
+						if($this->isToken('OF')){
+							$this->nextToken();
+							if($this->whiteSpace()){
+								if($this->RelativeFormats()||$this->DateFormats()){
+									$this->data['DAY'] = $this->Date::getDaysInMonth($this->data['YEAR'] ,$this->data['MONTH']);
+									var_dump($this->Date::getDaysInMonth($this->data['YEAR'] ,$this->data['MONTH']));
+									$this->data['HOURS'] = 0;
+									$this->data['MINUTES'] = 0;
+									$this->data['SECONDS'] = 0;
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		$this->resetPosition($pos);
+		return false;
+	}
+
+	function setWeekDayOfMonth(){
+		$pos = $this->getPosition();
+		if($this->isToken('LAST')){ // Calculates the last week day of the current month.
+			$this->nextToken();
+			if($this->whiteSpace()){
+				if($this->dayNeme($dow)){
+					if($this->whiteSpace()){
+						if($this->isToken('OF')){
+							$this->nextToken();
+							if($this->whiteSpace()){
+								if($this->RelativeFormats()||$this->DateFormats()){
+									$dow29month = $this->Date::getDayOfWeek(
+										$this->data['YEAR'] 
+										,$this->data['MONTH'] 
+										,$this->Date::getDaysInMonth(
+											$this->data['YEAR'] 
+											,$this->data['MONTH']));
+									if($dow < $dow29month){
+										$diffdow = $dow29month - $dow ;
+									}
+									elseif($dow > $dow29month){
+										$diffdow = 7 - $dow - $dow29month;
+									}
+									else{
+										$diffdow = 0;
+									}
+									list(
+										$this->data['YEAR'] 
+										,$this->data['MONTH'] 
+										,$this->data['DAY']) = $this->Date::getDaysOfDay(
+											$this->data['YEAR'] 
+											,$this->Date::getDayOfYear(false 
+												,$this->data['MONTH'] 
+												,1)
+												-$diffdow);
+									$this->data['HOURS'] = 0;
+									$this->data['MINUTES'] = 0;
+									$this->data['SECONDS'] = 0;
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		elseif($this->ordinal($int)){ // Calculates the x-th week day of the current month.
+			if($this->whiteSpace()){
+				if($this->dayNeme($dow)){
+					if($this->whiteSpace()){
+						if($this->isToken('OF')){
+							$this->nextToken();
+							if($this->whiteSpace()){
+								if($this->RelativeFormats()||$this->DateFormats()){
+									if($int>0){
+										$dow1month = $this->Date::getDayOfWeek($this->data['YEAR'] ,$this->data['MONTH'] ,1);
+										if($dow < $dow1month){
+											$diffdow = $dow1month - $dow ;
+										}
+										elseif($dow > $dow1month){
+											$diffdow = 7 - $dow - $dow1month;
+										}
+										else{
+											$diffdow = 0;
+										}
+										list(
+											$this->data['YEAR'] 
+											,$this->data['MONTH'] 
+											,$this->data['DAY']) = $this->Date::getDaysOfDay(
+												$this->data['YEAR'] 
+												,$this->Date::getDayOfYear(false 
+													,$this->data['MONTH'] 
+													,1)
+													+$diffdow+(($int-1)*7));
+										return true;
+									}
+									elseif($int == 0){
+
+									}
+									elseif($int == -1){
+
+									}
+									elseif($int == -2){
+
+									}
+									elseif($int == -3){
+										
+									}
+									$this->data['HOURS'] = 0;
+									$this->data['MINUTES'] = 0;
+									$this->data['SECONDS'] = 0;
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		$this->resetPosition($pos);
+		return false;
+	}
+
+	function handleRelativeTimeNumber(){
+		$pos = $this->getPosition();
+		if($this->Number($int,$sign)){ // Handles relative time items where the value is a number.
+			if($this->whiteSpace()){
+
+			} 
+			if($this->unit() || $this->isToken('WEEK')){
+
+				return true;
+			}
+		}
+		$this->resetPosition($pos);
+		return false;
+	}
+	
+	function handleRelativeTimeText(){
+		$pos = $this->getPosition();
+		if($this->ordinal($int)){ // Handles relative time items where the value is text.
+			if($this->whiteSpace()){
+				if($this->unit()){
+
+					return true;
+				}
+			}
+		}
+		$this->resetPosition($pos);
+		return false;
+	}
+
+	function handleRelativeTimeFormat(){
+		$pos = $this->getPosition();
+		if($this->relText($int)){ // Handles the special format "weekday + last/this/next week".
+			if($this->whiteSpace()){
+				if($this->isToken('WEEK')){
+					$this->nextToken();
+					return true;
+				}
+			}
+		}
+		$this->resetPosition($pos);
+		return false;
+	}
 
 	// ==============================================================================
 	// ==================================   TIME   ==================================
@@ -500,25 +756,30 @@ class Parser
 
 	function Hour12Notation(){
 		$pos = $this->getPosition();
-		if($this->hh12($h12)){
-			$this->tokens['HOURS_OF_DAY'] = $h12;
+		if($this->hours12OptionalPrefix($h12)){
 			if($this->isToken('COLON')||$this->isToken('DOT')){
 				$this->nextToken();
-				if($this->Minute_MandatoryPrefix($min)){
-					$this->tokens['MINUTES_OF_HOUR'] = $min;
+				if($this->minutesMandatoryPrefix($min)){
+					$this->data['MINUTES'] = $min;
 					if($this->isToken('COLON')||$this->isToken('DOT')){
 						$this->nextToken();
-						if($this->Second_MandatoryPrefix($sec)){
-							$this->tokens['SECONDS_OF_MINUTE'] = $sec;
+						if($this->secondsMandatoryPrefix($sec)){
+							$this->data['SECONDS'] = $sec;
 						}
 					}
 				}
 			}
-			if($this->Space()){
+			if($this->whiteSpace()){
 				$this->nextToken();
 			}
-			if($this->meridian($str)){
-				$this->tokens['AM_PM'] = $str;
+			if($this->meridian($meridian)){
+				if($meridian){
+					$this->data['HOURS'] = $h12+12;
+				}
+				else{
+					$this->data['HOURS'] = $h12;
+				}
+				$this->data['AM_PM'] = $meridian;
 				return true;
 			}
 		}
@@ -531,37 +792,37 @@ class Parser
 		if($this->isToken('SIGN_TIME')){
 			$this->nextToken();
 		}
-		if($this->HH24($h24)){
+		if($this->hours24MandatoryPrefix($h24)){
 			if($this->isToken('DOT')||$this->isToken('COLON')){
 				$this->nextToken();
-				if($this->Minute_MandatoryPrefix($min)){
+				if($this->minutesMandatoryPrefix($min)){
 					if($this->isToken('DOT')||$this->isToken('COLON')){
 						$this->nextToken();
-						if($this->Second_MandatoryPrefix($sec)){
-							$this->tokens['SECONDS_OF_MINUTE'] = $sec;
+						if($this->secondsMandatoryPrefix($sec)){
+							$this->data['SECONDS'] = $sec;
 							if($this->fraction($frac)){
-								$this->tokens['FRAC'] = $frac;
+								$this->data['FRAC'] = $frac;
 							}
-							$this->Space();
+							$this->whiteSpace();
 							$this->TZCorrection();
-							$this->TimeZone();
+							$this->timeZone();
 						}
 					}
-					$this->tokens['HOURS_OF_DAY'] = $h24;
-					$this->tokens['MINUTES_OF_HOUR'] = $min;
+					$this->data['HOURS'] = $h24;
+					$this->data['MINUTES'] = $min;
 					return true;
 				}
 			}
-			elseif($this->Minute_MandatoryPrefix($min)){
-				if($this->Second_MandatoryPrefix($sec)){
-					$this->tokens['SECONDS_OF_MINUTE'] = $sec;
+			elseif($this->minutesMandatoryPrefix($min)){
+				if($this->secondsMandatoryPrefix($sec)){
+					$this->data['SECONDS'] = $sec;
 				}
-				$this->tokens['HOURS_OF_DAY'] = $h24;
-				$this->tokens['MINUTES_OF_HOUR'] = $min;
+				$this->data['HOURS'] = $h24;
+				$this->data['MINUTES'] = $min;
 				return true;
 			}
 		}
-		elseif($this->TZCorrection()||$this->TimeZone()){
+		elseif($this->TZCorrection()||$this->timeZone()){
 			return true;
 		}
 		$this->resetPosition($pos);
@@ -574,46 +835,46 @@ class Parser
 	function DateFormats(){
 		// Localized Notations
 		
-		if($this->AmericanDate()){ // mm / dd /? y?
+		if($this->usaDate()){ // mm / dd /? y?
 			return true;
 		}
-		elseif($this->DateYear4_MandatoryPrefix()){ 
+		elseif($this->year4Date()){ 
 			return true;
 		}
-		elseif($this->DateYear_OptionalPrefix()){
-				
-		}
-		elseif($this->DateYear2_MandatoryPrefix()){
-				
-		}
-		elseif($this->DateDay_OptionalPrefix()){
-				
-		}
-		elseif($this->Year4_MandatoryPrefix($year)){
-			$this->tokens['YEAR_OF_Century'] = $year;
+		elseif($this->yearDateOptionalPrefix()){
 			return true;
 		}
-		elseif($this->Month_TextualFull($month)){
-			$this->tokens['MONTH_OF_YEAR'] = $month;
+		elseif($this->year2DateMandatoryPrefix()){
 			return true;
 		}
-
+		elseif($this->dayDateOptionalPrefix()){
+			return true;
+		}
+		elseif($this->year4MandatoryPrefix($year)){
+			$this->data['YEAR'] = $year;
+			return true;
+		}
+		elseif($this->monthTextualFull($month)){
+			$this->data['MONTH'] = $month;
+			return true;
+		}
+		return false;
 	}
 
-	function AmericanDate(){
+	function usaDate(){
 		$pos = $this->getPosition();
-		if($this->Month_OptionalPrefix($month)){
+		if($this->monthOptionalPrefix($month)){
 			if($this->isToken('SLASH')){
 				$this->nextToken();
-				if($this->Day_OptionalPrefix($day)){
+				if($this->dayOptionalPrefix($day)){
 					if($this->isToken('SLASH')){
 						$this->nextToken();
-						if($this->Year_OptionalPrefix($year)){
-							$this->tokens['YEAR_OF_Century'] = $year;
+						if($this->yearOptionalPrefix($year)){
+							$this->data['YEAR'] = $year;
 						}
 					}
-					$this->tokens['MONTH_OF_YEAR'] = $month;
-					$this->tokens['DAY_OF_MONTH'] = $day;
+					$this->data['MONTH'] = $month;
+					$this->data['DAY'] = $day;
 					return true;
 				}
 			}
@@ -622,37 +883,37 @@ class Parser
 		return false;
 	}
 
-	function DateYear4_MandatoryPrefix(){
-		if($this->DateYear4_Month_OptionalPrefix()){ // YY "/" mm "/" dd
+	function year4Date(){
+		if($this->year4DateMonthOptionalPrefix()){ // YY "/" mm "/" dd
 			return true;
 		}
-		if($this->DateYear4_Month_MandatoryPrefix()){//ISO  YY "/"? MM "/"? DD
+		if($this->year4DateMonthMandatoryPrefix()){//ISO  YY "/"? MM "/"? DD
 			return true;
 		}
-		if($this->DateYear4_DASH()){// YY "-" mm
+		if($this->year4DateDASH()){// YY "-" mm
 			return true;
 		}
-		if($this->DateYear4_Month_TextualFull()){ // YY ([ \t.-])* m    Day reset to 1
+		if($this->year4DateMonthTextual()){ // YY ([ \t.-])* m    Day reset to 1
 			return true;
 		}
-		if($this->DateYear4_sign()){ // [+-]? YY "-" MM "-" DD
+		if($this->year4Datesign()){ // [+-]? YY "-" MM "-" DD
 			return true;
 		}
 		return false;
 	}
 
-	function DateYear4_Month_OptionalPrefix(){ // YY "/" mm "/" dd
+	function year4DateMonthOptionalPrefix(){ // YY "/" mm "/" dd
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('SLASH')){
 				$this->nextToken();
-				if($this->Month_OptionalPrefix($month)){
+				if($this->monthOptionalPrefix($month)){
 					if($this->isToken('SLASH')){
 						$this->nextToken();
-						if($this->Day_OptionalPrefix($day)){
-							$this->tokens['YEAR_OF_Century'] = $year;
-							$this->tokens['MONTH_OF_YEAR'] = $month;
-							$this->tokens['DAY_OF_MONTH'] = $day;
+						if($this->dayOptionalPrefix($day)){
+							$this->data['YEAR'] = $year;
+							$this->data['MONTH'] = $month;
+							$this->data['DAY'] = $day;
 							return true;
 						}
 					}
@@ -663,20 +924,20 @@ class Parser
 		return false;
 	}
 
-	function DateYear4_Month_MandatoryPrefix(){ // YY "/"? MM "/"? DD
+	function year4DateMonthMandatoryPrefix(){ // YY "/"? MM "/"? DD
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('SLASH')){
 				$this->nextToken();
 			}
-			if($this->Month_MandatoryPrefix($month)){
+			if($this->monthMandatoryPrefix($month)){
 				if($this->isToken('SLASH')){
 					$this->nextToken();
 				}
-				if($this->Day_MandatoryPrefix($day)){
-					$this->tokens['YEAR_OF_Century'] = $year;
-					$this->tokens['MONTH_OF_YEAR'] = $month;
-					$this->tokens['DAY_OF_MONTH'] = $day;
+				if($this->dayMandatoryPrefix($day)){
+					$this->data['YEAR'] = $year;
+					$this->data['MONTH'] = $month;
+					$this->data['DAY'] = $day;
 					return true;
 				}
 			}
@@ -685,14 +946,14 @@ class Parser
 		return false;
 	}
 
-	function DateYear4_DASH(){ // YY "-" mm
+	function year4DateDASH(){ // YY "-" mm
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
-				if($this->Month_OptionalPrefix($month)){
-					$this->tokens['YEAR_OF_Century'] = $year;
-					$this->tokens['MONTH_OF_YEAR'] = $month;
+				if($this->monthOptionalPrefix($month)){
+					$this->data['YEAR'] = $year;
+					$this->data['MONTH'] = $month;
 					return true;
 				}
 			}
@@ -701,18 +962,18 @@ class Parser
 		return false;
 	}
 
-	function DateYear4_Month_TextualFull(){ // YY ([ \t.-])* m    Day reset to 1
+	function year4DateMonthTextual(){ // YY ([ \t.-])* m    Day reset to 1
 		$pos = $this->getPosition();
-		if($this->Year4_MandatoryPrefix($year)){
-			while($this->Space()||$this->isToken('DOT')||$this->isToken('DASH')){
+		if($this->year4MandatoryPrefix($year)){
+			while($this->whiteSpace()||$this->isToken('DOT')||$this->isToken('DASH')){
 				if($this->isToken('DOT')||$this->isToken('DASH')){
 					$this->nextToken();
 				}
 			}
-			if($this->Month_TextualFull($month)){
-				$this->tokens['YEAR_OF_Century'] = $year;
-				$this->tokens['MONTH_OF_YEAR'] = $month;
-				$this->tokens['DAY_OF_MONTH'] = 1;
+			if($this->monthTextualFull($month)){
+				$this->data['YEAR'] = $year;
+				$this->data['MONTH'] = $month;
+				$this->data['DAY'] = 1;
 				return true;
 			}
 		}
@@ -720,21 +981,21 @@ class Parser
 		return false;
 	}
 
-	function DateYear4_sign(){ // [+-]? YY "-" MM "-" DD
+	function year4Datesign(){ // [+-]? YY "-" MM "-" DD
 		$pos = $this->getPosition();
-		if($this->sign_number($sign));{
-			$this->tokens['SIGN_DATE'] = $sign;
+		if($this->signNumber($sign));{
+			$this->data['SIGN_DATE'] = $sign;
 		}
-		if($this->Year4_MandatoryPrefix($year)){
+		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
-				if($this->Month_MandatoryPrefix($month)){
+				if($this->monthMandatoryPrefix($month)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
-						if($this->Day_MandatoryPrefix($day)){
-							$this->tokens['YEAR_OF_Century'] = $year;
-							$this->tokens['MONTH_OF_YEAR'] = $month;
-							$this->tokens['DAY_OF_MONTH'] = $day;
+						if($this->dayMandatoryPrefix($day)){
+							$this->data['YEAR'] = $year;
+							$this->data['MONTH'] = $month;
+							$this->data['DAY'] = $day;
 							return true;
 						}
 					}
@@ -745,28 +1006,28 @@ class Parser
 		return false;
 	}
 
-	function DateYear_OptionalPrefix(){
-		if($this->DateYear_Month_OptionalPrefix()){ // y "-" mm "-" dd
+	function yearDateOptionalPrefix(){
+		if($this->yearDateMonthOptionalPrefix()){ // y "-" mm "-" dd
 			return true;
 		}
-		elseif($this->DateYear_Month_TextualFull()){ // y "-" M "-" DD
+		elseif($this->yearDateMonthTextual()){ // y "-" M "-" DD
 			return true;
 		}
 		return false;
 	}
 
-	function DateYear_Month_OptionalPrefix(){ // y "-" mm "-" dd
+	function yearDateMonthOptionalPrefix(){ // y "-" mm "-" dd
 		$pos = $this->getPosition();
-		if($this->Year_OptionalPrefix($year)){
+		if($this->yearOptionalPrefix($year)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
-				if($this->Month_OptionalPrefix($month)){
+				if($this->monthOptionalPrefix($month)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
-						if($this->Day_OptionalPrefix($day)){
-							$this->tokens['YEAR_OF_Century'] = $year;
-							$this->tokens['MONTH_OF_YEAR'] = $month;
-							$this->tokens['DAY_OF_MONTH'] = $day;
+						if($this->dayOptionalPrefix($day)){
+							$this->data['YEAR'] = $year;
+							$this->data['MONTH'] = $month;
+							$this->data['DAY'] = $day;
 							return true;
 						}
 					}
@@ -777,18 +1038,18 @@ class Parser
 		return false;
 	}
 
-	function DateYear_Month_TextualFull(){ // y "-" M "-" DD
+	function yearDateMonthTextual(){ // y "-" M "-" DD
 		$pos = $this->getPosition();
-		if($this->Year_OptionalPrefix($year)){
+		if($this->yearOptionalPrefix($year)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
-				if($this->Month_TextualShort($month)){
+				if($this->monthTextualShort($month)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
-						if($this->Day_MandatoryPrefix($day)){
-							$this->tokens['YEAR_OF_Century'] = $year;
-							$this->tokens['MONTH_OF_YEAR'] = $month;
-							$this->tokens['DAY_OF_MONTH'] = $day;
+						if($this->dayMandatoryPrefix($day)){
+							$this->data['YEAR'] = $year;
+							$this->data['MONTH'] = $month;
+							$this->data['DAY'] = $day;
 							return true;
 						}
 					}
@@ -799,18 +1060,18 @@ class Parser
 		return false;
 	}
 
-	function DateYear2_MandatoryPrefix(){ // yy "-" MM "-" DD
+	function year2DateMandatoryPrefix(){ // yy "-" MM "-" DD
 		$pos = $this->getPosition();
-		if($this->Year2_MandatoryPrefix($year)){
+		if($this->year2MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
-				if($this->Month_MandatoryPrefix($month)){
+				if($this->monthMandatoryPrefix($month)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
-						if($this->Day_MandatoryPrefix($day)){
-							$this->tokens['YEAR_OF_Century'] = $year;
-							$this->tokens['MONTH_OF_YEAR'] = $month;
-							$this->tokens['DAY_OF_MONTH'] = $day;
+						if($this->dayMandatoryPrefix($day)){
+							$this->data['YEAR'] = $year;
+							$this->data['MONTH'] = $month;
+							$this->data['DAY'] = $day;
 							return true;
 						}
 					}
@@ -822,39 +1083,39 @@ class Parser
 	}
 
 
-	function DateDay_OptionalPrefix(){
-		if($this->DateDay_year4_MandatoryPrefix()){
+	function dayDateOptionalPrefix(){
+		if($this->dayDateYear4MandatoryPrefix()){
 			return true;
 		}
-		elseif($this->DateDay_year2_MandatoryPrefix()){
+		elseif($this->dayDateYear2MandatoryPrefix()){
 			return true;
 		}
-		elseif($this->DateDay_day_OptionalPrefix()){
+		elseif($this->dayDateDayOptionalPrefix()){
 			return true;
 		}
-		elseif($this->DateDay_Month_TextualFull()){
+		elseif($this->dayDateMonthTextual()){
 			return true;
 		}
-		elseif($this->DateDay_Month_TextualShort()){
+		elseif($this->dayDateMonthTextualS()){
 			return true;
 		}
 		return false;
 	}
 
-	function DateDay_year4_MandatoryPrefix(){ // dd [.\t-] mm [.-] YY
+	function dayDateYear4MandatoryPrefix(){ // dd [.\t-] mm [.-] YY
 		$pos = $this->getPosition();
-		if($this->Day_OptionalPrefix($day)){
-			if($this->Space()||$this->isToken('DOT')||$this->isToken('DASH')){
+		if($this->dayOptionalPrefix($day)){
+			if($this->whiteSpace()||$this->isToken('DOT')||$this->isToken('DASH')){
 				if($this->isToken('DOT')||$this->isToken('DASH')){
 					$this->nextToken();
 				}
-				if($this->Month_OptionalPrefix($month)){
+				if($this->monthOptionalPrefix($month)){
 					if($this->isToken('DOT')||$this->isToken('DASH')){
 						$this->nextToken();
-						if($this->Year4_MandatoryPrefix($year)){
-							$this->tokens['YEAR_OF_Century'] = $year;
-							$this->tokens['MONTH_OF_YEAR'] = $month;
-							$this->tokens['DAY_OF_MONTH'] = $day;
+						if($this->year4MandatoryPrefix($year)){
+							$this->data['YEAR'] = $year;
+							$this->data['MONTH'] = $month;
+							$this->data['DAY'] = $day;
 							return true;
 						}
 					}
@@ -865,20 +1126,20 @@ class Parser
 		return false;
 	}
 
-	function DateDay_year2_MandatoryPrefix(){ //  dd [.\t] mm "." yy
+	function dayDateYear2MandatoryPrefix(){ //  dd [.\t] mm "." yy
 		$pos = $this->getPosition();
-		if($this->Day_OptionalPrefix($day)){
-			if($this->Space()||$this->isToken('DOT')){
+		if($this->dayOptionalPrefix($day)){
+			if($this->whiteSpace()||$this->isToken('DOT')){
 				if($this->isToken('DOT')){
 					$this->nextToken();
 				}
-				if($this->Month_OptionalPrefix($month)){
+				if($this->monthOptionalPrefix($month)){
 					if($this->isToken('DOT')){
 						$this->nextToken();
-						if($this->Year2_MandatoryPrefix($year)){
-							$this->tokens['YEAR_OF_Century'] = $year;
-							$this->tokens['MONTH_OF_YEAR'] = $month;
-							$this->tokens['DAY_OF_MONTH'] = $day;
+						if($this->year2MandatoryPrefix($year)){
+							$this->data['YEAR'] = $year;
+							$this->data['MONTH'] = $month;
+							$this->data['DAY'] = $day;
 							return true;
 						}
 					}
@@ -889,25 +1150,25 @@ class Parser
 		return false;
 	}
 
-	function DateDay_day_OptionalPrefix(){
+	function dayDateDayOptionalPrefix(){
 		$pos = $this->getPosition();
-		if($this->Day_OptionalPrefix($day)){ // dd ([ \t.-])* m ([ \t.-])* y
-			while($this->Space()||$this->isToken('DOT')||$this->isToken('DASH')){
+		if($this->dayOptionalPrefix($day)){ // dd ([ \t.-])* m ([ \t.-])* y
+			while($this->whiteSpace()||$this->isToken('DOT')||$this->isToken('DASH')){
 				if($this->isToken('DOT')||$this->isToken('DASH')){
 					$this->nextToken();
 				}
 			}
-			if($this->Month_TextualFull($month)){ // d ([ .\t-])* m
-				while($this->Space()||$this->isToken('DOT')||$this->isToken('DASH')){
+			if($this->monthTextualFull($month)){ // d ([ .\t-])* m
+				while($this->whiteSpace()||$this->isToken('DOT')||$this->isToken('DASH')){
 					if($this->isToken('DOT')||$this->isToken('DASH')){
 						$this->nextToken();
 					}
 				}
-				if($this->Year_OptionalPrefix($year)){
-					$this->tokens['YEAR_OF_Century'] = $year;
+				if($this->yearOptionalPrefix($year)){
+					$this->data['YEAR'] = $year;
 				}
-				$this->tokens['MONTH_OF_YEAR'] = $month;
-				$this->tokens['DAY_OF_MONTH'] = $day;
+				$this->data['MONTH'] = $month;
+				$this->data['DAY'] = $day;
 				return true;
 			}
 			
@@ -916,50 +1177,51 @@ class Parser
 		return false;
 	}
 
-	function DateDay_Month_TextualFull(){
+	function dayDateMonthTextual(){
 		$pos = $this->getPosition();
-		if($this->Month_TextualFull($month)){ // m ([ \t.-])* YY         Day reset to 1
-			while($this->Space()||$this->isToken('DOT')||$this->isToken('DASH')){
+		if($this->monthTextualFull($month)){ // m ([ \t.-])* YY         Day reset to 1
+			while($this->whiteSpace()||$this->isToken('DOT')||$this->isToken('DASH')){
 				if($this->isToken('DOT')||$this->isToken('DASH')){
 					$this->nextToken();
 				}
 			}
-			if($this->Year4_MandatoryPrefix($year)){
-				$this->tokens['YEAR_OF_Century'] = $year;
-				$this->tokens['MONTH_OF_YEAR'] = $month;
-				$this->tokens['DAY_OF_MONTH'] = 1;
+			if($this->year4MandatoryPrefix($year)){
+				$this->data['YEAR'] = $year;
+				$this->data['MONTH'] = $month;
+				$this->data['DAY'] = 1;
 				return true;
 			}
-			elseif($this->Day_OptionalPrefix($day)){ // m ([ .\t-])* dd [,.stndrh\t ]+? y?
-				while($this->Space()||$this->Day_Suffix()||$this->isToken('COMMA')||$this->isToken('DOT')){
+			elseif($this->dayOptionalPrefix($day)){ // m ([ .\t-])* dd [,.stndrh\t ]+? y?
+				while($this->whiteSpace()||$this->daySuffixTextual()||$this->isToken('COMMA')||$this->isToken('DOT')){
 					if($this->isToken('DOT')||$this->isToken('COMMA')){
 						$this->nextToken();
 					}
 				}
-				if($this->Year_OptionalPrefix($year)){
-					$this->tokens['YEAR_OF_Century'] = $year;
-					$this->tokens['MONTH_OF_YEAR'] = $month;
-					$this->tokens['DAY_OF_MONTH'] = $day;
+				if($this->yearOptionalPrefix($year)){
+					$this->data['YEAR'] = $year;
 					return true;
 				}
+					$this->data['MONTH'] = $month;
+					$this->data['DAY'] = $day;
+					return true;
 			}
 		}
 		$this->resetPosition($pos);
 		return false;
 	}
 
-	function DateDay_Month_TextualShort(){ // M "-" DD "-" y
+	function dayDateMonthTextualS(){ // M "-" DD "-" y
 		$pos = $this->getPosition();
-		if($this->Month_TextualShort($month)){
+		if($this->monthTextualShort($month)){
 			if($this->isToken('DASH')){
 				$this->nextToken();
-				if($this->Day_MandatoryPrefix($day)){
+				if($this->dayMandatoryPrefix($day)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
-						if($this->Year_OptionalPrefix($year)){
-							$this->tokens['YEAR_OF_Century'] = $year;
-							$this->tokens['MONTH_OF_YEAR'] = $month;
-							$this->tokens['DAY_OF_MONTH'] = $day;
+						if($this->yearOptionalPrefix($year)){
+							$this->data['YEAR'] = $year;
+							$this->data['MONTH'] = $month;
+							$this->data['DAY'] = $day;
 							return true;
 						}
 					}
@@ -970,12 +1232,18 @@ class Parser
 		return false;
 	}
 
-
 	// ======================================================================================
 	// ==================================   Used Symbols   ==================================
 	// ======================================================================================
 
-	function Space(){
+	function restTime($h = 0,$m = 0,$s = 0){
+		$this->data['HOURS'] = $h;
+		$this->data['MINUTES'] = $m;
+		$this->data['SECONDS'] = $s;
+		return true;
+	}
+
+	function whiteSpace(){
 		if($this->isToken('SPACE')){
 			$this->nextToken();
 			return true;
@@ -983,68 +1251,67 @@ class Parser
 		return false;
 	}
 
-	function hh12(&$int){
-		if($this->int_01_to_09($int)||$this->int_1_to_9($int)||$this->int_10_to_12($int)){
+	function hours12OptionalPrefix(&$int){
+		if($this->int01To09($int)||$this->int1To9($int)||$this->int10To12($int)){
 			return true;
 		}
 		return false;
 	}
 
-	function HH24(&$int){
-		if($this->int_01_to_09($int)||$this->int_10_to_24($int)){
+	function hours24MandatoryPrefix(&$int){
+		if($this->int01To09($int)||$this->int10To24($int)){
 			return true;
 		}
 		return false;
 	}
 
 	function meridian(&$str){
-		$str = false;
 		if($this->isToken('AM')){
-			$str = 'am';
+			$str = false;
 			$this->nextToken();
 			return true;
 		}
 		elseif($this->isToken('PM')){
-			$str = 'pm';
+			$str = true;
 			$this->nextToken();
 			return true;
 		}
 		return false;
 	}
 
-	function Minute_MandatoryPrefix(&$int){
-		if($this->int_00($int)||$this->int_01_to_09($int)||$this->int_10_to_59($int)){
+	function minutesMandatoryPrefix(&$int){
+		if($this->int00($int)||$this->int01To09($int)||$this->int10To59($int)){
 			return true;
 		}
 		return false;
 	}
 
-	function Minute_OptionalPrefix(&$int){
-		if($this->int_00($int)||$this->int_0($int)||$this->int_1_to_9($int)||$this->int_01_to_09($int)||$this->int_10_to_59($int)){
-			$this->tokens['MINUTES_OF_HOUR'] = $int;
+	function minutesOptionalPrefix(&$int){
+		if($this->int00($int)||$this->int0($int)||$this->int1To9($int)||$this->int01To09($int)||$this->int10To59($int)){
+			$this->data['MINUTES'] = $int;
 			return true;
 		}
 		return false;
 	}
 
-	function Second_OptionalPrefix(&$int){
-		if($this->int_00($int)||$this->int_0($int)||$this->int_1_to_9($int)||$this->int_01_to_09($int)||$this->int_10_to_59($int)){
-			$this->tokens['SECONDS_OF_MINUTE'] = $int;
+	function secondsOptionalPrefix(&$int){
+		if($this->int00($int)||$this->int0($int)||$this->int1To9($int)||$this->int01To09($int)||$this->int10To59($int)){
+			$this->data['SECONDS'] = $int;
 			return true;
 		}
 		return false;
 	}
 
-	function Second_MandatoryPrefix(&$int){
-		if($this->int_00($int)||$this->int_01_to_09($int)||$this->int_10_to_59($int)){
+	function secondsMandatoryPrefix(&$int){
+		if($this->int00($int)||$this->int01To09($int)||$this->int10To59($int)){
 			return true;
 		}
 		return false;
 	}
 
-	function TimeZone(){
+	function timeZone(){
 		if($this->isToken('TZ')){
-			$this->tokens['TZ_NAME'] = $this->Lexer->getLookahead()->getValue();
+			$this->data['TZ_NAME'] = $this->valueToken();
 			return true;
 		}
 		return false;
@@ -1056,22 +1323,22 @@ class Parser
 		}
 		$PLUS_DASH = false;
 		if($this->isToken('PLUS')){
-			$this->tokens['TZ_SIGN'] = '+';
+			$this->data['TZ_SIGN'] = '+';
 			$this->nextToken();
 			$PLUS_DASH = true;
 		}
 		elseif($this->isToken('DASH')){
-			$this->tokens['TZ_SIGN'] = '-';
+			$this->data['TZ_SIGN'] = '-';
 			$this->nextToken();
 			$PLUS_DASH = true;
 		}
-		if($PLUS_DASH&&$this->hh12($h12)){
-			$this->tokens['TZ_HOURS'] = $h12;
+		if($PLUS_DASH&&$this->hours12OptionalPrefix($h12)){
+			$this->data['TZ_HOURS'] = $h12;
 			if($this->isToken('COLON')){
 				$this->nextToken();
 			}
-			if($this->Minute_MandatoryPrefix($min)){
-				$this->tokens['TZ_MINUTES'] = $min;
+			if($this->minutesMandatoryPrefix($min)){
+				$this->data['TZ_MINUTES'] = $min;
 				return true;
 			}
 			return true;
@@ -1083,7 +1350,7 @@ class Parser
 		if($this->isToken('DOT')){
 			$this->nextToken();
 			$isInt = false;
-			while($this->int_10_to_99($int)||$this->int_00($int)||$this->int_01_to_09($int)||$this->int_0($int)||$this->int_1_to_9($int)){
+			while($this->int10To99($int)||$this->int00($int)||$this->int01To09($int)||$this->int0($int)||$this->int1To9($int)){
 				$num .= $int;//sprintf('%s%s',$num,$int);
 				$isInt = true;
 			}
@@ -1095,11 +1362,8 @@ class Parser
 	}
 
 // date
-	function Day_Suffix(){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function daySuffixTextual(){
+		switch($this->nameToken()){
 			case "st": $this->nextToken(); return true;
 			case "nd": $this->nextToken(); return true;
 			case "rd": $this->nextToken(); return true;
@@ -1109,9 +1373,9 @@ class Parser
 	}
 
 // a number between 0 and 31 inclusive, with an optional 0 prefix before numbers 0-9
-	function Day_OptionalPrefix(&$int){ 
-		if($this->int_00($int)||$this->int_0($int)||$this->int_1_to_9($int)||$this->int_01_to_09($int)||$this->int_10_to_31($int)){
-			if($this->Day_Suffix()){
+	function dayOptionalPrefix(&$int){ 
+		if($this->int00($int)||$this->int0($int)||$this->int1To9($int)||$this->int01To09($int)||$this->int10To31($int)){
+			if($this->daySuffixTextual()){
 				return true;
 			}
 			return true;
@@ -1120,70 +1384,79 @@ class Parser
 	}
 
 // a number between 00 and 31 inclusive, with a mandatory 0 prefix before numbers 0-9
-	function Day_MandatoryPrefix(&$int){ 
-		if($this->int_00($int)||$this->int_01_to_09($int)||$this->int_10_to_31($int)){
+	function dayMandatoryPrefix(&$int){ 
+		if($this->int00($int)||$this->int01To09($int)||$this->int10To31($int)){
 			return true;
 		}
 		return false;
 	}
 
-	function Month_TextualFull(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
-			case 'JANUARY':	
-				$this->tokens['MONTH_OF_YEAR'] = 1; $this->nextToken(); return true;
-			case 'FEBRUARY':
-				$this->tokens['MONTH_OF_YEAR'] = 2; $this->nextToken(); return true;
-			case 'MARCH': 
-				$this->tokens['MONTH_OF_YEAR'] = 3; $this->nextToken(); return true;
-			case 'APRIL': 
-				$this->tokens['MONTH_OF_YEAR'] = 4; $this->nextToken(); return true;
-			case 'MAY': 
-				$this->tokens['MONTH_OF_YEAR'] = 5; $this->nextToken(); return true;
-			case 'JUNE': 
-				$this->tokens['MONTH_OF_YEAR'] = 6; $this->nextToken(); return true;
-			case 'JULY': 
-				$this->tokens['MONTH_OF_YEAR'] = 7; $this->nextToken(); return true;
-			case 'AUGUST': 
-				$this->tokens['MONTH_OF_YEAR'] = 8; $this->nextToken(); return true;
-			case 'SEPTEMBER': 
-				$this->tokens['MONTH_OF_YEAR'] = 9; $this->nextToken(); return true;
-			case 'OCTOBER': 
-				$this->tokens['MONTH_OF_YEAR'] = 10; $this->nextToken(); return true;
-			case 'NOVEMBER': 
-				$this->tokens['MONTH_OF_YEAR'] = 11; $this->nextToken(); return true;
-			case 'DECEMBER': 
+	function monthTextualFull(&$int){
+		switch($this->nameToken()){
+			case 'FARVARDIN':
+			case 'INT_I':
+				$int = 1; $this->nextToken(); return true;
+			case 'ORDIBEHESHT':
+			case 'INT_II':
+				$int = 2; $this->nextToken(); return true;
+			case 'KHORDAD':
+			case 'INT_III':
+				$int = 3; $this->nextToken(); return true;
+			case 'TIR':
+			case 'INT_IV':
+				$int = 4; $this->nextToken(); return true;
+			case 'AMORDAD':
+			case 'INT_V':
+				$int = 5; $this->nextToken(); return true;
+			case 'SHAHRIVAR':
+			case 'INT_VI':
+				$int = 6; $this->nextToken(); return true;
+			case 'MEHR':
+			case 'INT_VII':
+				$int = 7; $this->nextToken(); return true;
+			case 'ABAN':
+			case 'INT_VIII':
+				$int = 8; $this->nextToken(); return true;
+			case 'AZAR':
+			case 'INT_IX':
+				$int = 9; $this->nextToken(); return true;
+			case 'DEY':
+			case 'INT_X':
+				$int = 10; $this->nextToken(); return true;
+			case 'BAHMAN':
+			case 'INT_XI':
+				$int = 11; $this->nextToken(); return true;
+			case 'ESFAND':
+			case 'INT_XII':
 				$int = 12; $this->nextToken(); return true;
 			default:return false;
 		}
 	}
 
-	function Month_TextualShort(&$int){ // abbreviated month
-		if($this->Month_TextualFull($int)){
+	function monthTextualShort(&$int){ // abbreviated month
+		if($this->monthTextualFull($int)){
 			return true;
 		}
 		return false;
 	}
 
-	function Month_OptionalPrefix(&$int){
-		if($this->int_00($int)||$this->int_0($int)||$this->int_01_to_09($int)||$this->int_1_to_9($int)||$this->int_10_to_12($int)){
+	function monthOptionalPrefix(&$int){
+		if($this->int00($int)||$this->int0($int)||$this->int01To09($int)||$this->int1To9($int)||$this->int10To12($int)){
 			return true;
 		}
 		return false;
 	}
 
-	function Month_MandatoryPrefix(&$int){
-		if($this->int_00($int)||$this->int_01_to_09($int)||$this->int_1_to_9($int)||$this->int_10_to_12($int)){
+	function monthMandatoryPrefix(&$int){
+		if($this->int00($int)||$this->int01To09($int)||$this->int1To9($int)||$this->int10To12($int)){
 			return true;
 		}
 		return false;
 	}
 
-	function Year_OptionalPrefix(&$int){
-		if($this->int_00($int)||$this->int_0($int)||$this->int_01_to_09($int)||$this->int_1_to_9($int)||$this->int_10_to_99($int)){
-			if($this->int_00($int2)||$this->int_0($int2)||$this->int_01_to_09($int2)||$this->int_1_to_9($int2)||$this->int_10_to_99($int2)){
+	function yearOptionalPrefix(&$int){
+		if($this->int00($int)||$this->int0($int)||$this->int01To09($int)||$this->int1To9($int)||$this->int10To99($int)){
+			if($this->int00($int2)||$this->int0($int2)||$this->int01To09($int2)||$this->int1To9($int2)||$this->int10To99($int2)){
 				$int .= $int2;
 				return true;
 			}
@@ -1192,16 +1465,16 @@ class Parser
 		return false;
 	}
 
-	function Year2_MandatoryPrefix(&$int){
-		if($this->int_00($int)||$this->int_01_to_09($int)||$this->int_10_to_99($int)){
+	function year2MandatoryPrefix(&$int){
+		if($this->int00($int)||$this->int01To09($int)||$this->int10To99($int)){
 			return true;
 		}
 		return false;
 	}
 
-	function Year4_MandatoryPrefix(&$int){
-		if($this->Year2_MandatoryPrefix($int)){
-			if($this->Year2_MandatoryPrefix($int2)){
+	function year4MandatoryPrefix(&$int){
+		if($this->year2MandatoryPrefix($int)){
+			if($this->year2MandatoryPrefix($int2)){
 				$int .= $int2;
 				return true;
 			}
@@ -1212,8 +1485,8 @@ class Parser
 // Compound
 
 	function dayOfYear(&$int){
-		if($this->int_00($int)||$this->int_01_to_09($int)||$this->int_10_to_99($int)){
-			if($this->int_0($int2)||$this->int_1_to_9($int2)){
+		if($this->int00($int)||$this->int01To09($int)||$this->int10To99($int)){
+			if($this->int0($int2)||$this->int1To9($int2)){
 				$int .= $int2;
 				return true;
 			}
@@ -1221,16 +1494,16 @@ class Parser
 		return false;
 	}
 
-	function W(&$int){
-		if($this->int_00($int)||$this->int_01_to_09($int)||$this->int_10_to_53($int)){
+	function week53(&$int){
+		if($this->int00($int)||$this->int01To09($int)||$this->int10To53($int)){
 			return true;
 		}
 		return false;
 	}
 // Relative
 
-	function Space_Any(){
-		while($this->Space()){
+	function SpaceMore(){
+		while($this->whiteSpace()){
 			$space = true;
 		}
 		if($space){
@@ -1238,22 +1511,22 @@ class Parser
 		}
 		return false;
 	}
-	function dayname(){
-		switch($this->Lexer->getLookahead()->getName()){
-			case 'saturday': 
-				$this->tokens['DAY_OF_WEEK'] = 1; $this->nextToken(); return true;
-			case 'sunday':	
-				$this->tokens['DAY_OF_WEEK'] = 2; $this->nextToken(); return true;
-			case 'monday':
-				$this->tokens['DAY_OF_WEEK'] = 3; $this->nextToken(); return true;
-			case 'tuesday': 
-				$this->tokens['DAY_OF_WEEK'] = 4; $this->nextToken(); return true;
-			case 'wednesday': 
-				$this->tokens['DAY_OF_WEEK'] = 5; $this->nextToken(); return true;
-			case 'thursday': 
-				$this->tokens['DAY_OF_WEEK'] = 6; $this->nextToken(); return true;
-			case 'friday': 
-				$this->tokens['DAY_OF_WEEK'] = 7; $this->nextToken(); return true;
+	function dayNeme(&$dow){
+		switch($this->nameToken()){
+			case 'SATURDAY': 
+				$dow = 0; $this->nextToken(); return true;
+			case 'SUNDAY':	
+				$dow = 1; $this->nextToken(); return true;
+			case 'MONDAY':
+				$dow = 2; $this->nextToken(); return true;
+			case 'TUESDAY': 
+				$dow = 3; $this->nextToken(); return true;
+			case 'WEDNESDAY': 
+				$dow = 4; $this->nextToken(); return true;
+			case 'THURSDAY': 
+				$dow = 5; $this->nextToken(); return true;
+			case 'FRIDAY': 
+				$dow = 6; $this->nextToken(); return true;
 			default:return false;
 		}
 	}
@@ -1266,7 +1539,7 @@ class Parser
 		return false;
 	}
 
-	function sign_number(&$sign){
+	function signNumber(&$sign){
 		if($this->isToken('PLUS')){
 			$sign = '+';
 			$this->nextToken();
@@ -1281,10 +1554,10 @@ class Parser
 		return false;
 	}
 
-	function number(&$num,&$sign){
-		if($this->sign_number($sign));
+	function Number(&$num,&$sign){
+		if($this->signNumber($sign));
 		$isInt = false;
-		while($this->int_10_to_99($int)||$this->int_00($int)||$this->int_01_to_09($int)||$this->int_0($int)||$this->int_1_to_9($int)){
+		while($this->int10To99($int)||$this->int00($int)||$this->int01To09($int)||$this->int0($int)||$this->int1To9($int)){
 			$num .= $int;//sprintf('%s%s',$num,$int);
 			$isInt = true;
 		}
@@ -1294,52 +1567,50 @@ class Parser
 		return false;
 	}
 
-	function ordinal(){
-		if($this->first_to_thirty_first($int)){
-
+	function ordinal(&$int){
+		if($this->firstToThirtyFirstTextual($int)){
+			return true;
 		}
-		elseif($this->reltext()){
-
+		elseif($this->relText($int)){
+			return true;
 		}
 		return false;
 	}
 
-	function reltext(){
-		switch($this->Lexer->getLookahead()->getName()){
-			case 'next': 
-				$this->tokens['next'] = 1; $this->nextToken(); return true;
-			case 'last':	
-				$this->tokens['last'] = -1; $this->nextToken(); return true;
-			case 'previous':
-				$this->tokens['previous'] = -2; $this->nextToken(); return true;
-			case 'this': 
-				$this->tokens['this'] = 0; $this->nextToken(); return true;
+	function relText(&$int){
+		switch($this->nameToken()){
+			case 'THIS':
+				$int = 0; $this->nextToken(); return true;
+			case 'NEXT':
+				$int = -1; $this->nextToken(); return true;
+			case 'PREVIOUS':
+				$int = -2; $this->nextToken(); return true;
+			case 'LAST':
+				$int = -3; $this->nextToken(); return true;
 			default:return false;
 		}
 	}
 
-	function unit(){
-		switch($this->Lexer->getLookahead()->getName()){
+	function unit(&$int){
+		switch($this->nameToken()){
 			case 'SECOND': 
-				$this->tokens['sec'] = 1; $this->nextToken(); return true;
+				$int = 1; $this->nextToken(); return true;
 			case 'MINUTE':	
-				$this->tokens['min'] = 2; $this->nextToken(); return true;
+				$int = 2; $this->nextToken(); return true;
 			case 'HOUR':
-				$this->tokens['hour'] = 3; $this->nextToken(); return true;
+				$int = 3; $this->nextToken(); return true;
 			case 'DAY': 
-				$this->tokens['this'] = 4; $this->nextToken(); return true;
-			case 'FORTNIGHT':
-				$this->tokens['this'] = 5; $this->nextToken(); return true;
+				$int = 4; $this->nextToken(); return true;
 			case 'MONTH': 
-				$this->tokens['this'] = 6; $this->nextToken(); return true;
+				$int = 5; $this->nextToken(); return true;
 			case 'YEAR': 
-				$this->tokens['this'] = 7; $this->nextToken(); return true;
+				$int = 6; $this->nextToken(); return true;
 			case 'WEEKS': 
-				$this->tokens['this'] = 8; $this->nextToken(); return true;
-			case 'WEEKS': 
-				$this->tokens['this'] = 9; $this->nextToken(); return true;
+				$int = 7; $this->nextToken(); return true;
 			case 'WEEKDAY': 
-				$this->tokens['this'] = 10; $this->nextToken(); return true;
+				$int = 8; $this->nextToken(); return true;
+			case 'FORTNIGHT':
+				$int = 9; $this->nextToken(); return true;
 			default:return false;
 		}
 	}
@@ -1349,11 +1620,8 @@ class Parser
 	// =================================================================================
 
 	// a spelled number between one and thirty-one (one, two, etc.)
-	function one_to_thirty_one(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function oneToThirtyOneTextual(&$int){
+		switch($this->nameToken()){
 			case 'ONE':		$int = 1; $this->nextToken(); return true;
 			case 'TWO':		$int = 2; $this->nextToken(); return true;
 			case 'THREE':	$int = 3; $this->nextToken(); return true;
@@ -1380,7 +1648,7 @@ class Parser
 				{
 					$this->nextToken();
 				}
-				switch($this->Lexer->getLookahead()->getName()){
+				switch($this->nameToken()){
 					case 'ONE':		$int = 21; $this->nextToken(); return true;
 					case 'TWO':		$int = 22; $this->nextToken(); return true;
 					case 'THREE':	$int = 23; $this->nextToken(); return true;
@@ -1409,11 +1677,8 @@ class Parser
 	}
 
 	// a spelled number in sequence between first and thirty-first
-	function first_to_thirty_first(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function firstToThirtyFirstTextual(&$int){
+		switch($this->nameToken()){
 			case 'FIRST':	$int = 1; $this->nextToken(); return true;
 			case 'SECOND':	$int = 2; $this->nextToken(); return true;
 			case 'THIRD':	$int = 3; $this->nextToken(); return true;
@@ -1442,7 +1707,7 @@ class Parser
 				{
 					$this->nextToken();
 				}
-				switch($this->Lexer->getLookahead()->getName()){
+				switch($this->nameToken()){
 					case 'FIRST':	$int = 21; $this->nextToken(); return true;
 					case 'SECOND':	$int = 22; $this->nextToken(); return true;
 					case 'THIRD':	$int = 23; $this->nextToken(); return true;
@@ -1468,11 +1733,8 @@ class Parser
 		}
 	}
 
-	function int_10_to_99(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function int10To99(&$int){
+		switch($this->nameToken()){
 			case 'INT_60':
 			case 'INT_61':
 			case 'INT_62':
@@ -1513,36 +1775,30 @@ class Parser
 			case 'INT_97':
 			case 'INT_98':
 			case 'INT_99':
-				$int = $this->Lexer->getLookahead()->getValue();
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
-			default: return $this->int_10_to_59($int);
+			default: return $this->int10To59($int);
 		}
 	}
 
-	function int_10_to_59(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function int10To59(&$int){
+		switch($this->nameToken()){
 			case 'INT_54':
 			case 'INT_55':
 			case 'INT_56':
 			case 'INT_57':
 			case 'INT_58':
 			case 'INT_59':
-				$int = $this->Lexer->getLookahead()->getValue();
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
-			default: return $this->int_10_to_53($int);
+			default: return $this->int10To53($int);
 		}
 	}
 
-	function int_10_to_53(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function int10To53(&$int){
+		switch($this->nameToken()){
 			case 'INT_37':
 			case 'INT_38':
 			case 'INT_39':
@@ -1560,36 +1816,29 @@ class Parser
 			case 'INT_51':
 			case 'INT_52':
 			case 'INT_53':
-				$int = $this->Lexer->getLookahead()->getValue();
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
-			default: return $this->int_10_to_36($int);
+			default: return $this->int10To36($int);
 		}
 	}
 
-	function int_10_to_36(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function int10To36(&$int){
+		switch($this->nameToken()){
 			case 'INT_32':
 			case 'INT_33':
 			case 'INT_34':
 			case 'INT_35':
 			case 'INT_36':
-				$int = $this->Lexer->getLookahead()->getValue();
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
-			default: return $this->int_10_to_31($int);
+			default: return $this->int10To31($int);
 		}
 	}
 	
-	
-	function int_10_to_31(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function int10To31(&$int){
+		switch($this->nameToken()){
 			case 'INT_25':
 			case 'INT_26':
 			case 'INT_27':
@@ -1597,30 +1846,24 @@ class Parser
 			case 'INT_29':
 			case 'INT_30':
 			case 'INT_31':
-				$int = $this->Lexer->getLookahead()->getValue();
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
-			default: return $this->int_10_to_24($int);
+			default: return $this->int10To24($int);
 		}
 	}
 	
-	function int_10_to_24(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
+	function int10To24(&$int){
 		if($this->isToken('INT_24')){
-			$int = $this->Lexer->getLookahead()->getValue();
+			$int = $this->valueToken();
 				$this->nextToken();
 				return true;
 		}
-		return $this->int_10_to_23($int);
+		return $this->int10To23($int);
 	}
 
-	function int_10_to_23(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function int10To23(&$int){
+		switch($this->nameToken()){
 			case 'INT_13':
 			case 'INT_14':
 			case 'INT_15':
@@ -1632,69 +1875,56 @@ class Parser
 			case 'INT_21':
 			case 'INT_22':
 			case 'INT_23':
-				$int = $this->Lexer->getLookahead()->getValue();
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
-			default: return $this->int_10_to_12($int);
+			default: return $this->int10To12($int);
 		}
 	}
 	
-	
-	function int_10_to_12(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function int10To12(&$int){
+		switch($this->nameToken()){
 			case 'INT_10':
 			case 'INT_11':
 			case 'INT_12':
-				$int = $this->Lexer->getLookahead()->getValue();
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
 			default: return false;
 		}
 	}
 	
-	function int_01_to_09(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
-			case 'INT_01':
-			case 'INT_02': 
-			case 'INT_03':
-			case 'INT_04':
-			case 'INT_05':
-			case 'INT_06':
-			case 'INT_07':
-			case 'INT_08':
-			case 'INT_09':
-				$int = $this->Lexer->getLookahead()->getValue();
+	function int01To09(&$int){
+		switch($this->nameToken()){
+			case 'int01':
+			case 'int02': 
+			case 'int03':
+			case 'int04':
+			case 'int05':
+			case 'int06':
+			case 'int07':
+			case 'int08':
+			case 'int09':
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
 			default: return false;
 		}
 	}
 
-	function int_1_to_9(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function int1To9(&$int){
+		switch($this->nameToken()){
 			case 'INT_8':
 			case 'INT_9': 
-				$int = $this->Lexer->getLookahead()->getValue();
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
-			default: return $this->int_1_to_7($int);
+			default: return $this->int1To7($int);
 		}
 	}
 
-	function int_1_to_7(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		switch($this->Lexer->getLookahead()->getName()){
+	function int1To7(&$int){
+		switch($this->nameToken()){
 			case 'INT_1':
 			case 'INT_2':
 			case 'INT_3':
@@ -1702,31 +1932,25 @@ class Parser
 			case 'INT_5':
 			case 'INT_6':
 			case 'INT_7':
-				$int = $this->Lexer->getLookahead()->getValue();
+				$int = $this->valueToken();
 				$this->nextToken();
 				return true;
 			default: return false;
 		}
 	}
 	
-	function int_00(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		if($this->isToken('INT_00')){
-			$int = $this->Lexer->getLookahead()->getValue();
+	function int00(&$int){
+		if($this->isToken('int00')){
+			$int = $this->valueToken();
 			$this->nextToken();
 			return true;
 		}
 		return false;
 	}
 
-	function int_0(&$int){
-		if(is_null($this->Lexer->getLookahead())){
-			return false;
-		}
-		if($this->isToken('INT_0')){
-			$int = $this->Lexer->getLookahead()->getValue();
+	function int0(&$int){
+		if($this->isToken('int0')){
+			$int = $this->valueToken();
 			$this->nextToken();
 			return true;
 		}
