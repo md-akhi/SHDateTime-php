@@ -9,7 +9,7 @@
     * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
     * @version		Release: 2.0.0-alpha.5
     */
-	//require __DIR__ . '/vendor/autoload.php';
+	//require(__DIR__ . '/../vendor/autoload.php');
 	require_once(__DIR__."/Config.php");
 	require_once(__DIR__."/i18n/Word.php");
 	include_once(__DIR__."/parser/Parser.php");
