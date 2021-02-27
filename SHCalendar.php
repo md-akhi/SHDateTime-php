@@ -11,7 +11,7 @@
     * @version		Release: 2.0.0-alpha.1
     */
 	
-	require_once("src/SHBase.php");
+	require_once("SHBase.php");
 
     /* Predefined Constants */
     define("CAL_SOLAR",CAL_NUM_CALS);
