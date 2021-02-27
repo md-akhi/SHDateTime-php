@@ -11,7 +11,7 @@
     */
 
 
-require_once(__DIR__."/SHBase.php");
+require_once("src/SHBase.php");
 
 	class SHDate extends SHDateBase {
 		
