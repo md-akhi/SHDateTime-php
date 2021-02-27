@@ -3,7 +3,5 @@ composer.phar
 composer.lock
 phpDocumentor.phar
 /featur/
-/parser/ParseDateTime/
-/test/
+/tests/
 /z/
-parser/tst.php
