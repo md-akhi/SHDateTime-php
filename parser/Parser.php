@@ -475,24 +475,42 @@ class SHParser
 		}
 		elseif($this->setWeekDayOfMonth()){
 			return true;
-		}/*
+		}
 		elseif($this->handleRelativeTimeNumber()){
 			return true;
 		}
 		elseif($this->handleRelativeTimeText()){
 			return true;
 		}
+		elseif($this->dayNeme($dow)){ // Moves to the next day of this name.
+			$dowmonth = $this->Date::getDayOfWeek($this->data['YEAR'] ,$this->data['MONTH'] ,$this->data['DAY']);
+			if($dow < $dowmonth){
+				$diffdow = 7 - $dowmonth - $dow ;
+			}
+			elseif($dow > $dowmonth){
+				$diffdow = $dow - $dowmonth;
+			}
+			else{
+				$diffdow = 0;
+			}
+			list(
+				$this->data['YEAR'] 
+				,$this->data['MONTH'] 
+				,$this->data['DAY']) = $this->Date::getDaysOfDay(
+					$this->data['YEAR'] 
+					,$this->Date::getDayOfYear(false 
+						,$this->data['MONTH'] 
+						,1)
+						+$diffdow);
+			return true;
+		}/*
 		elseif($this->isToken('ago')){ // Negates all the values of previously found relative time items.
 			$this->nextToken();
-			return true;
-		}*/
-		elseif($this->dayNeme($dow)){ // Moves to the next day of this name.	"Monday"
-			$this->data['DAY_OF_WEEK'] = $dow;
 			return true;
 		}
 		elseif($this->handleRelativeTimeFormat()){
 			return true;
-		}
+		}*/
 		return false;
 	}
 
@@ -532,7 +550,7 @@ class SHParser
 							$this->data['MINUTES'] = 45;
 							$this->data['SECONDS'] = 0;
 							if(!$this->Date->checktime($h24-1,45,0)){
-								$this->data['HOURS'] = $this->Date->Revtime($h24-1,45,0)[0];
+								$this->data['HOURS'] = $this->Date->revTime($h24-1,45,0)[0];
 							}
 							return true;
 						}
@@ -701,11 +719,40 @@ class SHParser
 	function handleRelativeTimeNumber(){
 		$pos = $this->getPosition();
 		if($this->Number($int,$sign)){ // Handles relative time items where the value is a number.
-			if($this->whiteSpace()){
-
-			} 
-			if($this->unit() || $this->isToken('WEEK')){
-
+			if($this->whiteSpace());
+			if($this->unit($rel) || $this->isToken('WEEK')){
+				$int = intval($sign.$int);
+				if($this->isToken('WEEK')||$rel == 53){
+					$diffdow = $int*7;
+				}
+				elseif($rel == 59){ // SECONDS
+					list($this->data['HOURS'] ,$this->data['MINUTES'] ,$this->data['SECONDS']) = $this->Date::revTime($this->data['HOURS'] ,$this->data['MINUTES'] ,$int);
+				}
+				elseif($rel == 60){ // MINUTES
+					list($this->data['HOURS'] ,$this->data['MINUTES'] ,$this->data['SECONDS']) = $this->Date::revTime($this->data['HOURS'] ,$int ,$this->data['SECONDS']);
+				}
+				elseif($rel == 24){ // todo add with date
+					list($this->data['HOURS'] ,$this->data['MINUTES'] ,$this->data['SECONDS']) = $this->Date::revTime($int ,$this->data['MINUTES'] ,$this->data['SECONDS']);
+				}
+				elseif($rel == 31){// DAY
+					$diffdow = $int;
+				}
+				elseif($rel == 12){// todo calc with month with year
+					$diffdow = $int*30.5;
+				}
+				elseif($rel == 100){// YEAR
+					if($int<0)
+						$this->data['YEAR'] -= $int;
+					if($int>0)
+						$this->data['YEAR'] += $int;
+				}
+				elseif($rel == 7){// todo day of week		weekday
+					
+				}
+				elseif($rel == 14){// FORTNIGHT
+					$diffdow = $int*14;
+				}
+				list($this->data['YEAR'] ,$this->data['MONTH'] ,$this->data['DAY']) = $this->Date::getDaysOfDay($this->data['YEAR'], $this->Date::getDayOfYear($this->data['YEAR'] ,$this->data['MONTH'] ,$this->data['DAY'])+$diffdow);
 				return true;
 			}
 		}
@@ -717,8 +764,38 @@ class SHParser
 		$pos = $this->getPosition();
 		if($this->ordinal($int)){ // Handles relative time items where the value is text.
 			if($this->whiteSpace()){
-				if($this->unit()){
-
+				if($this->unit($rel)){
+					if($this->isToken('WEEK')||$rel == 53){
+						$diffdoy = $int*7;
+					}
+					elseif($rel == 59){ // SECONDS
+						list($this->data['HOURS'] ,$this->data['MINUTES'] ,$this->data['SECONDS']) = $this->Date::revTime($this->data['HOURS'] ,$this->data['MINUTES'] ,$int);
+					}
+					elseif($rel == 60){ // MINUTES
+						list($this->data['HOURS'] ,$this->data['MINUTES'] ,$this->data['SECONDS']) = $this->Date::revTime($this->data['HOURS'] ,$int ,$this->data['SECONDS']);
+					}
+					elseif($rel == 24){ // todo add with date
+						list($this->data['HOURS'] ,$this->data['MINUTES'] ,$this->data['SECONDS']) = $this->Date::revTime($int ,$this->data['MINUTES'] ,$this->data['SECONDS']);
+					}
+					elseif($rel == 31){// DAY
+						$diffdoy = $int;
+					}
+					elseif($rel == 12){// todo calc with month with year
+						$diffdoy = $int*30.5;
+					}
+					elseif($rel == 100){// YEAR
+						if($int<0)
+							$this->data['YEAR'] -= $int;
+						if($int>0)
+							$this->data['YEAR'] += $int;
+					}
+					elseif($rel == 7){// todo day of week		weekday
+						
+					}
+					elseif($rel == 14){// FORTNIGHT
+						$diffdoy = $int*14;
+					}
+					list($this->data['YEAR'] ,$this->data['MONTH'] ,$this->data['DAY']) = $this->Date::getDaysOfDay($this->data['YEAR'], $this->Date::getDayOfYear($this->data['YEAR'] ,$this->data['MONTH'] ,$this->data['DAY'])+$diffdoy);
 					return true;
 				}
 			}
@@ -1594,23 +1671,23 @@ class SHParser
 	function unit(&$int){
 		switch($this->nameToken()){
 			case 'SECOND': 
-				$int = 1; $this->nextToken(); return true;
+				$int = 59; $this->nextToken(); return true;
 			case 'MINUTE':	
-				$int = 2; $this->nextToken(); return true;
+				$int = 60; $this->nextToken(); return true;
 			case 'HOUR':
-				$int = 3; $this->nextToken(); return true;
+				$int = 24; $this->nextToken(); return true;
 			case 'DAY': 
-				$int = 4; $this->nextToken(); return true;
+				$int = 31; $this->nextToken(); return true;
 			case 'MONTH': 
-				$int = 5; $this->nextToken(); return true;
+				$int = 12; $this->nextToken(); return true;
 			case 'YEAR': 
-				$int = 6; $this->nextToken(); return true;
+				$int = 100; $this->nextToken(); return true;
 			case 'WEEKS': 
-				$int = 7; $this->nextToken(); return true;
+				$int = 53; $this->nextToken(); return true;
 			case 'WEEKDAY': 
-				$int = 8; $this->nextToken(); return true;
+				$int = 7; $this->nextToken(); return true;
 			case 'FORTNIGHT':
-				$int = 9; $this->nextToken(); return true;
+				$int = 14; $this->nextToken(); return true;
 			default:return false;
 		}
 	}
