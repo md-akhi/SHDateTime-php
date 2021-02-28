@@ -527,11 +527,15 @@
 			list($hours,$minute,$second) = self::numval($hours,$minute,$second);
 			return !($hours<0||$hours>23||$minute<0||$minute>59||$second<0||$second>59);
 		}
-
+	
 		/**
-		*
-		*
-		*/
+		 * revTime
+		 *
+		 * @param  int $hours
+		 * @param  int $minute
+		 * @param  int $second
+		 * @return array
+		 */
 		public static function revTime($hours,$minute,$second){
 			$time = ($hours*3600 /* 60*60 */)+($minute*60)+$second;
 			$second = $time%60;

@@ -1,15 +1,42 @@
 ﻿<?php
-
+    /**
+	* 	In the name of Allah
+	*
+    * @package		Date and Time Related Extensions SH{ Shamsi Hijri, Solar Hijri, Iranian Hijri }
+    * @author		Mohammad Amanalikhani (MD Amanalikhani, MD Akhi)
+    * @link			http://git.akhi.ir/php/SHDateTime.php			(Repository)
+    * @link			https://github.com/md-akhi/SHDateTime-php		(Repository)
+    * @link			http://help.akhi.ir/php/SHDateTime.php			(Help ,Wiki)
+    * @link			https://github.com/md-akhi/SHDateTime-php/wiki 	(Help ,Wiki)
+    * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
+    * @version		Release: 1.0.0-alpha.1
+    */
+	
 
 require_once __DIR__.'/Lexer.php';
 require_once dirname(__DIR__).'/SHBase.php';
 
 
+/**
+ * SHParser
+ */
 class SHParser
 {
-
+	
+	/**
+	 * Lexer
+	 *
+	 * @var object
+	 */
 	public $Lexer;
-
+	
+	/**
+	 * __construct
+	 *
+	 * @param  string $srt
+	 * @param  int $time
+	 * @return array
+	 */
 	function __construct($srt, $time = null){
 		if(empty($time)){
 			$time = $this->Date::time();
@@ -24,9 +51,15 @@ class SHParser
 			elseif($this->DateFormats());
 			elseif($this->TimeFormats());
 		}while($this->nextToken());
-		//return $this->LibDateTime();
+		//return $this->data();
 	}
-
+	
+	/**
+	 * set Date/Time
+	 *
+	 * @param  int $time
+	 * @return void
+	 */
 	function setDateTime($time){
 		$date = $this->Date::getdate($time);
 		$this->data['YEAR'] = $date['year'];
@@ -42,37 +75,74 @@ class SHParser
 		$this->data['GDATE'] = getdate($time);
 
 	}
-
+	
+	/**
+	 * is Token
+	 *
+	 * @param  string $token
+	 * @return bool
+	 */
 	function isToken($token){
 		if(!is_null($this->Lexer->getLookahead())){
 			return $this->Lexer->getLookahead()->is($token);
 		}
 		return false;
 	}
-
+	
+	/**
+	 * name Token
+	 *
+	 * @return bool
+	 */
 	function nameToken(){
 		return $this->Lexer->getLookahead()->getName();
 	}
-
+	
+	/**
+	 * value Token
+	 *
+	 * @return bool
+	 */
 	function valueToken(){
 		return $this->Lexer->getLookahead()->getValue();
 	}
-	
+		
+	/**
+	 * next Token
+	 *
+	 * @return bool
+	 */
 	function nextToken(){
 		return $this->Lexer->moveNext();
 	}
-
+	
+	/**
+	 * get Position
+	 *
+	 * @return bool
+	 */
 	function getPosition(){
 		return $this->Lexer->getPosition();
 	}
-
+	
+	/**
+	 * reset Position
+	 *
+	 * @param  int $pos
+	 * @return bool
+	 */
 	function resetPosition($pos){
 		return $this->Lexer->resetPosition($pos);
 	}
 
 	// ==============================================================================
 	// =================================   Compound   ===============================
-	// ==============================================================================
+	// ==============================================================================	
+	/**
+	 * Compound Formats
+	 *
+	 * @return bool
+	 */
 	function CompoundFormats(){// Localized Notations
 		if($this->CommonLogFormat()){ // dd/M/Y:HH:II:SS tspace tzcorrection
 			return true;
@@ -106,7 +176,12 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Common Log Format
+	 *
+	 * @return bool
+	 */
 	function CommonLogFormat(){
 		$pos = $this->getPosition();
 		if($this->dayOptionalPrefix($day)){
@@ -150,7 +225,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * EXIF
+	 *
+	 * @return bool
+	 */
 	function EXIF(){
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -189,7 +269,13 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * ISO year with ISO week
+	 * ISO year with ISO week and day
+	 *
+	 * @return bool
+	 */
 	function IsoYearWeekDay(){
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -214,7 +300,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * MySQL
+	 *
+	 * @return bool
+	 */
 	function MySQL(){
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -253,7 +344,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * PostgreSQL: Year with day-of-year
+	 *
+	 * @return bool
+	 */
 	function PostgreSQL(){
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -269,7 +365,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * SOAP
+	 *
+	 * @return bool
+	 */
 	function SOAP(){
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -313,7 +414,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Unix Timestamp
+	 *
+	 * @return bool
+	 */
 	function Unix_Timestamp(){
 		$pos = $this->getPosition();
 		if($this->isToken('AT')){
@@ -329,7 +435,13 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * XMLRPC
+	 * XMLRPC (Compact)
+	 *
+	 * @return bool
+	 */
 	function XMLRPC(){
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -363,7 +475,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * WDDX
+	 *
+	 * @return bool
+	 */
 	function WDDX(){
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -403,7 +520,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-	
+		
+	/**
+	 * MS SQL (Hour, minutes, seconds and fraction with meridian)
+	 *
+	 * @return bool
+	 */
 	function MS_SQL(){ //hh ":" II ":" SS [.:] [0-9]+ meridian  |  in Time Formats
 		$pos = $this->getPosition();
 		if($this->hours12OptionalPrefix($h12)){
@@ -442,7 +564,12 @@ class SHParser
 
 	// ==============================================================================
 	// =================================   Relative   ===============================
-	// ==============================================================================
+	// ==============================================================================	
+	/**
+	 * Relative Formats
+	 *
+	 * @return bool
+	 */
 	function RelativeFormats(){
 		//Day-based Notations
 		if($this->isToken('NOW')){ // Now - this is simply ignored
@@ -513,7 +640,13 @@ class SHParser
 		}*/
 		return false;
 	}
-
+	
+	/**
+	 * 15 minutes past the specified hour
+	 * 15 minutes before the specified hour
+	 *
+	 * @return bool
+	 */
 	function minutes15SpecifiedHour(){
 		$pos = $this->getPosition();
 		if($this->isToken('BACK')){ // 15 minutes past the specified hour
@@ -561,7 +694,14 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Sets the day of the first of the current month.		{
+	 * Sets the day to the last day of the current month.	{
+	 * { This phrase is best used together with a month name following it. }
+	 *
+	 * @return bool
+	 */
 	function setDayOfMonth(){
 		$pos = $this->getPosition();
 		if($this->isToken('FIRST')){ // Sets the day of the first of the current month. This phrase is best used together with a month name following it.
@@ -612,7 +752,13 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Calculates the x-th week day of the current month.
+	 * Calculates the last week day of the current month.
+	 *
+	 * @return bool
+	 */
 	function setWeekDayOfMonth(){
 		$pos = $this->getPosition();
 		if($this->isToken('LAST')){ // Calculates the last week day of the current month.
@@ -715,7 +861,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Handles relative time items where the value is a number.
+	 *
+	 * @return bool
+	 */
 	function handleRelativeTimeNumber(){
 		$pos = $this->getPosition();
 		if($this->Number($int,$sign)){ // Handles relative time items where the value is a number.
@@ -759,7 +910,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-	
+		
+	/**
+	 * Handles relative time items where the value is text.
+	 *
+	 * @return bool
+	 */
 	function handleRelativeTimeText(){
 		$pos = $this->getPosition();
 		if($this->ordinal($int)){ // Handles relative time items where the value is text.
@@ -803,7 +959,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Handles the special format "weekday + last/this/next week".
+	 *
+	 * @return bool
+	 */
 	function handleRelativeTimeFormat(){
 		$pos = $this->getPosition();
 		if($this->relText($int)){ // Handles the special format "weekday + last/this/next week".
@@ -820,7 +981,12 @@ class SHParser
 
 	// ==============================================================================
 	// ==================================   TIME   ==================================
-	// ==============================================================================
+	// ==============================================================================	
+	/**
+	 * TimeFormats
+	 *
+	 * @return bool
+	 */
 	function TimeFormats(){// hh [.:]? II? [.:]? SS? space? meridian
 		if($this->Hour12Notation()){
 			return true;
@@ -830,7 +996,13 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Hour, optional minutes and seconds, with meridian
+	 * 
+	 *
+	 * @return bool
+	 */
 	function Hour12Notation(){
 		$pos = $this->getPosition();
 		if($this->hours12OptionalPrefix($h12)){
@@ -863,7 +1035,15 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Hour, minutes and optional seconds, optional colon and dot
+	 * Hour, minutes, seconds and timezone
+	 * Hour, minutes, seconds and fraction
+	 * Time zone information
+	 *
+	 * @return bool
+	 */
 	function Hour24Notation(){// 't'? HH [.:] II [.:]? SS? (frac | (space? ( tzcorrection | tz )))
 		$pos = $this->getPosition();
 		if($this->isToken('SIGN_TIME')){
@@ -908,7 +1088,12 @@ class SHParser
 
 	// ==============================================================================
 	// ==================================   Date   ==================================
-	// ==============================================================================
+	// ==============================================================================	
+	/**
+	 * Date Formats
+	 *
+	 * @return bool
+	 */
 	function DateFormats(){
 		// Localized Notations
 		
@@ -937,7 +1122,12 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * American month, day and optional year
+	 *
+	 * @return bool
+	 */
 	function usaDate(){
 		$pos = $this->getPosition();
 		if($this->monthOptionalPrefix($month)){
@@ -959,7 +1149,17 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Four digit year, month and day with slashes
+	 * Four digit year and month (GNU)
+	 * Four digit year and textual month (Day reset to 1)
+	 * Year (and just the year)
+	 * Four digit year, month and day with optional slashes
+	 * Four digit year with optional sign, month and day
+	 *
+	 * @return bool
+	 */
 	function year4Date(){
 		if($this->year4DateMonthOptionalPrefix()){ // YY "/" mm "/" dd
 			return true;
@@ -978,7 +1178,12 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Four digit year, month and day with slashes
+	 *
+	 * @return bool
+	 */
 	function year4DateMonthOptionalPrefix(){ // YY "/" mm "/" dd
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -1000,7 +1205,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Four digit year, month and day
+	 *
+	 * @return bool
+	 */
 	function year4DateMonthMandatoryPrefix(){ // YY "/"? MM "/"? DD
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -1022,7 +1232,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Four digit year and month (GNU)
+	 *
+	 * @return bool
+	 */
 	function year4DateDASH(){ // YY "-" mm
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -1038,7 +1253,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Four digit year and textual month (Day reset to 1)
+	 *
+	 * @return bool
+	 */
 	function year4DateMonthTextual(){ // YY ([ \t.-])* m    Day reset to 1
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
@@ -1057,7 +1277,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Four digit year with optional sign, month and day
+	 *
+	 * @return bool
+	 */
 	function year4Datesign(){ // [+-]? YY "-" MM "-" DD
 		$pos = $this->getPosition();
 		if($this->signNumber($sign));{
@@ -1082,7 +1307,13 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Year, month and day with dashes
+	 * Year, month abbreviation and day
+	 *
+	 * @return bool
+	 */
 	function yearDateOptionalPrefix(){
 		if($this->yearDateMonthOptionalPrefix()){ // y "-" mm "-" dd
 			return true;
@@ -1092,7 +1323,12 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Year, month and day with dashes
+	 *
+	 * @return bool
+	 */
 	function yearDateMonthOptionalPrefix(){ // y "-" mm "-" dd
 		$pos = $this->getPosition();
 		if($this->yearOptionalPrefix($year)){
@@ -1114,7 +1350,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Year, month abbreviation and day
+	 *
+	 * @return bool
+	 */
 	function yearDateMonthTextual(){ // y "-" M "-" DD
 		$pos = $this->getPosition();
 		if($this->yearOptionalPrefix($year)){
@@ -1136,7 +1377,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Two digit year, month and day with dashes
+	 *
+	 * @return bool
+	 */
 	function year2DateMandatoryPrefix(){ // yy "-" MM "-" DD
 		$pos = $this->getPosition();
 		if($this->year2MandatoryPrefix($year)){
@@ -1158,8 +1404,15 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
-
+	
+	/**
+	 * Day, month and four digit year, with dots, tabs or dashes
+	 * Day, month and two digit year, with dots or tabs
+	 * Day, textual month and year
+	 * Day and textual month
+	 *
+	 * @return bool
+	 */
 	function dayDateOptionalPrefix(){
 		if($this->dayDateYear4MandatoryPrefix()){
 			return true;
@@ -1178,7 +1431,12 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Day, month and four digit year, with dots, tabs or dashes
+	 *
+	 * @return bool
+	 */
 	function dayDateYear4MandatoryPrefix(){ // dd [.\t-] mm [.-] YY
 		$pos = $this->getPosition();
 		if($this->dayOptionalPrefix($day)){
@@ -1202,7 +1460,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Day, month and two digit year, with dots or tabs
+	 *
+	 * @return bool
+	 */
 	function dayDateYear2MandatoryPrefix(){ //  dd [.\t] mm "." yy
 		$pos = $this->getPosition();
 		if($this->dayOptionalPrefix($day)){
@@ -1226,7 +1489,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Day, textual month and year
+	 *
+	 * @return bool
+	 */
 	function dayDateDayOptionalPrefix(){
 		$pos = $this->getPosition();
 		if($this->dayOptionalPrefix($day)){ // dd ([ \t.-])* m ([ \t.-])* y
@@ -1253,7 +1521,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Textual month and four digit year (Day reset to 1)
+	 *
+	 * @return bool
+	 */
 	function dayDateMonthTextual(){
 		$pos = $this->getPosition();
 		if($this->monthTextualFull($month)){ // m ([ \t.-])* YY         Day reset to 1
@@ -1286,7 +1559,12 @@ class SHParser
 		$this->resetPosition($pos);
 		return false;
 	}
-
+	
+	/**
+	 * Month abbreviation, day and year
+	 *
+	 * @return bool
+	 */
 	function dayDateMonthTextualS(){ // M "-" DD "-" y
 		$pos = $this->getPosition();
 		if($this->monthTextualShort($month)){
@@ -1312,14 +1590,27 @@ class SHParser
 	// ======================================================================================
 	// ==================================   Used Symbols   ==================================
 	// ======================================================================================
-
+	
+	/**
+	 * rest Time
+	 *
+	 * @param  int $h
+	 * @param  int $m
+	 * @param  int $s
+	 * @return bool
+	 */
 	function restTime($h = 0,$m = 0,$s = 0){
 		$this->data['HOURS'] = $h;
 		$this->data['MINUTES'] = $m;
 		$this->data['SECONDS'] = $s;
 		return true;
 	}
-
+	
+	/**
+	 * white Space
+	 *
+	 * @return bool
+	 */
 	function whiteSpace(){
 		if($this->isToken('SPACE')){
 			$this->nextToken();
@@ -1327,21 +1618,41 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * hours
+	 * a number between 1 and 12 inclusive, with a optional 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function hours12OptionalPrefix(&$int){
 		if($this->int01To09($int)||$this->int1To9($int)||$this->int10To12($int)){
 			return true;
 		}
 		return false;
 	}
-
+	
+	/**
+	 * hours
+	 * a number between 01 and 24 inclusive, with a mandatory 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function hours24MandatoryPrefix(&$int){
 		if($this->int01To09($int)||$this->int10To24($int)){
 			return true;
 		}
 		return false;
 	}
-
+	
+	/**
+	 * meridian am/pm indicator
+	 *
+	 * @param  int $str
+	 * @return bool
+	 */
 	function meridian(&$str){
 		if($this->isToken('AM')){
 			$str = false;
@@ -1355,14 +1666,28 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * minutes
+	 * a number between 01 and 59 inclusive, with a mandatory 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function minutesMandatoryPrefix(&$int){
 		if($this->int00($int)||$this->int01To09($int)||$this->int10To59($int)){
 			return true;
 		}
 		return false;
 	}
-
+	
+	/**
+	 * minutes
+	 * a number between 1 and 59 inclusive, with an optional 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function minutesOptionalPrefix(&$int){
 		if($this->int00($int)||$this->int0($int)||$this->int1To9($int)||$this->int01To09($int)||$this->int10To59($int)){
 			$this->data['MINUTES'] = $int;
@@ -1370,7 +1695,14 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * seconds
+	 * a number between 1 and 59 inclusive, with an optional 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function secondsOptionalPrefix(&$int){
 		if($this->int00($int)||$this->int0($int)||$this->int1To9($int)||$this->int01To09($int)||$this->int10To59($int)){
 			$this->data['SECONDS'] = $int;
@@ -1378,14 +1710,26 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * seconds
+	 * a number between 01 and 59 inclusive, with a mandatory 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function secondsMandatoryPrefix(&$int){
 		if($this->int00($int)||$this->int01To09($int)||$this->int10To59($int)){
 			return true;
 		}
 		return false;
 	}
-
+	
+	/**
+	 * timeZone
+	 *
+	 * @return bool
+	 */
 	function timeZone(){
 		if($this->isToken('TZ')){
 			$this->data['TZ_NAME'] = $this->valueToken();
@@ -1393,7 +1737,12 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * TZCorrection
+	 *
+	 * @return bool
+	 */
 	function TZCorrection(){
 		if($this->isToken('UTC')){
 			$this->nextToken();
@@ -1422,7 +1771,13 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * fraction
+	 *
+	 * @param  int $num
+	 * @return bool
+	 */
 	function fraction(&$num){
 		if($this->isToken('DOT')){
 			$this->nextToken();
@@ -1438,7 +1793,12 @@ class SHParser
 		return false;
 	}
 
-// date
+// date	
+	/**
+	 * daySuffixTextual
+	 *
+	 * @return bool
+	 */
 	function daySuffixTextual(){
 		switch($this->nameToken()){
 			case "st": $this->nextToken(); return true;
@@ -1449,7 +1809,13 @@ class SHParser
 		}
 	}
 
-// a number between 0 and 31 inclusive, with an optional 0 prefix before numbers 0-9
+	/**
+	 * day
+	 * a number between 1 and 31 inclusive, with an optional 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function dayOptionalPrefix(&$int){ 
 		if($this->int00($int)||$this->int0($int)||$this->int1To9($int)||$this->int01To09($int)||$this->int10To31($int)){
 			if($this->daySuffixTextual()){
@@ -1460,14 +1826,26 @@ class SHParser
 		return false;
 	}
 
-// a number between 00 and 31 inclusive, with a mandatory 0 prefix before numbers 0-9
+	/**
+	 * day
+	 * a number between 01 and 31 inclusive, with a mandatory 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function dayMandatoryPrefix(&$int){ 
 		if($this->int00($int)||$this->int01To09($int)||$this->int10To31($int)){
 			return true;
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Textual month (and just the month)
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function monthTextualFull(&$int){
 		switch($this->nameToken()){
 			case 'FARVARDIN':
@@ -1509,28 +1887,55 @@ class SHParser
 			default:return false;
 		}
 	}
-
+	
+	/**
+	 * Textual abbreviation month  (and just the month)
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function monthTextualShort(&$int){ // abbreviated month
 		if($this->monthTextualFull($int)){
 			return true;
 		}
 		return false;
 	}
-
+	
+	/**
+	 * month
+	 * a number between 1 and 12 inclusive, with an optional 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function monthOptionalPrefix(&$int){
 		if($this->int00($int)||$this->int0($int)||$this->int01To09($int)||$this->int1To9($int)||$this->int10To12($int)){
 			return true;
 		}
 		return false;
 	}
-
+	
+	/**
+	 * month
+	 * a number between 1 and 12 inclusive, with an mandatory 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function monthMandatoryPrefix(&$int){
 		if($this->int00($int)||$this->int01To09($int)||$this->int1To9($int)||$this->int10To12($int)){
 			return true;
 		}
 		return false;
 	}
-
+	
+	/**
+	 * year
+	 *  a number between 1 and 9999 inclusive, with an optional 0 prefix before numbers 0-9
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function yearOptionalPrefix(&$int){
 		if($this->int00($int)||$this->int0($int)||$this->int01To09($int)||$this->int1To9($int)||$this->int10To99($int)){
 			if($this->int00($int2)||$this->int0($int2)||$this->int01To09($int2)||$this->int1To9($int2)||$this->int10To99($int2)){
@@ -1541,14 +1946,27 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 *	a number with exactly two digits
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function year2MandatoryPrefix(&$int){
 		if($this->int00($int)||$this->int01To09($int)||$this->int10To99($int)){
 			return true;
 		}
 		return false;
 	}
-
+	
+	/**
+	 * year
+	 * a number with exactly four digits
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function year4MandatoryPrefix(&$int){
 		if($this->year2MandatoryPrefix($int)){
 			if($this->year2MandatoryPrefix($int2)){
@@ -1560,7 +1978,13 @@ class SHParser
 	}
 
 // Compound
-
+	
+	/**
+	 * day Of Year
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function dayOfYear(&$int){
 		if($this->int00($int)||$this->int01To09($int)||$this->int10To99($int)){
 			if($this->int0($int2)||$this->int1To9($int2)){
@@ -1570,7 +1994,13 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * week of year
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function week53(&$int){
 		if($this->int00($int)||$this->int01To09($int)||$this->int10To53($int)){
 			return true;
@@ -1578,7 +2008,12 @@ class SHParser
 		return false;
 	}
 // Relative
-
+	
+	/**
+	 * Space +
+	 *
+	 * @return bool
+	 */
 	function SpaceMore(){
 		while($this->whiteSpace()){
 			$space = true;
@@ -1588,6 +2023,13 @@ class SHParser
 		}
 		return false;
 	}
+		
+	/**
+	 * day neme
+	 *
+	 * @param  int $dow
+	 * @return bool
+	 */
 	function dayNeme(&$dow){
 		switch($this->nameToken()){
 			case 'SATURDAY': 
@@ -1607,7 +2049,12 @@ class SHParser
 			default:return false;
 		}
 	}
-
+	
+	/**
+	 * day text
+	 *
+	 * @return bool
+	 */
 	function daytext(){
 		if($this->isToken('WEEKDAY')){
 			$this->nextToken();
@@ -1615,7 +2062,13 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * number sign
+	 *
+	 * @param  string $sign
+	 * @return bool
+	 */
 	function signNumber(&$sign){
 		if($this->isToken('PLUS')){
 			$sign = '+';
@@ -1630,7 +2083,14 @@ class SHParser
 		$sign = '+';
 		return false;
 	}
-
+	
+	/**
+	 * number
+	 *
+	 * @param  int $num
+	 * @param  string $sign
+	 * @return bool
+	 */
 	function Number(&$num,&$sign){
 		if($this->signNumber($sign));
 		$isInt = false;
@@ -1643,7 +2103,13 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Ordinal number
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function ordinal(&$int){
 		if($this->firstToThirtyFirstTextual($int)){
 			return true;
@@ -1653,7 +2119,13 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * relative text
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function relText(&$int){
 		switch($this->nameToken()){
 			case 'THIS':
@@ -1667,7 +2139,13 @@ class SHParser
 			default:return false;
 		}
 	}
-
+	
+	/**
+	 * unit
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function unit(&$int){
 		switch($this->nameToken()){
 			case 'SECOND': 
@@ -1696,7 +2174,12 @@ class SHParser
 	// ==================================   numeric   ==================================
 	// =================================================================================
 
-	// a spelled number between one and thirty-one (one, two, etc.)
+	/**
+	 * a spelled number between one and thirty-one (one, two, etc.)	
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function oneToThirtyOneTextual(&$int){
 		switch($this->nameToken()){
 			case 'ONE':		$int = 1; $this->nextToken(); return true;
@@ -1753,7 +2236,12 @@ class SHParser
 		}
 	}
 
-	// a spelled number in sequence between first and thirty-first
+	/**
+	 * a spelled number in sequence between first and thirty-first
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function firstToThirtyFirstTextual(&$int){
 		switch($this->nameToken()){
 			case 'FIRST':	$int = 1; $this->nextToken(); return true;
@@ -1809,7 +2297,13 @@ class SHParser
 			default: return false;
 		}
 	}
-
+	
+	/**
+	 * a number between ten and ninety nine
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int10To99(&$int){
 		switch($this->nameToken()){
 			case 'INT_60':
@@ -1858,7 +2352,13 @@ class SHParser
 			default: return $this->int10To59($int);
 		}
 	}
-
+	
+	/**
+	 * a number between ten and fifty nine
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int10To59(&$int){
 		switch($this->nameToken()){
 			case 'INT_54':
@@ -1873,7 +2373,13 @@ class SHParser
 			default: return $this->int10To53($int);
 		}
 	}
-
+	
+	/**
+	 * a number between ten and fifty three
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int10To53(&$int){
 		switch($this->nameToken()){
 			case 'INT_37':
@@ -1899,7 +2405,13 @@ class SHParser
 			default: return $this->int10To36($int);
 		}
 	}
-
+	
+	/**
+	 * a number between ten and thirty six
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int10To36(&$int){
 		switch($this->nameToken()){
 			case 'INT_32':
@@ -1913,7 +2425,13 @@ class SHParser
 			default: return $this->int10To31($int);
 		}
 	}
-	
+		
+	/**
+	 * a number between ten and thirty one
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int10To31(&$int){
 		switch($this->nameToken()){
 			case 'INT_25':
@@ -1929,7 +2447,13 @@ class SHParser
 			default: return $this->int10To24($int);
 		}
 	}
-	
+		
+	/**
+	 * a number between ten and twenty four
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int10To24(&$int){
 		if($this->isToken('INT_24')){
 			$int = $this->valueToken();
@@ -1938,7 +2462,13 @@ class SHParser
 		}
 		return $this->int10To23($int);
 	}
-
+	
+	/**
+	 * a number between ten and twenty three
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int10To23(&$int){
 		switch($this->nameToken()){
 			case 'INT_13':
@@ -1958,7 +2488,13 @@ class SHParser
 			default: return $this->int10To12($int);
 		}
 	}
-	
+		
+	/**
+	 * a number between ten and twelfth
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int10To12(&$int){
 		switch($this->nameToken()){
 			case 'INT_10':
@@ -1970,7 +2506,13 @@ class SHParser
 			default: return false;
 		}
 	}
-	
+		
+	/**
+	 * a number between one and nine - two digits
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int01To09(&$int){
 		switch($this->nameToken()){
 			case 'int01':
@@ -1988,7 +2530,13 @@ class SHParser
 			default: return false;
 		}
 	}
-
+	
+	/**
+	 * a number between one and nine - single digits
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int1To9(&$int){
 		switch($this->nameToken()){
 			case 'INT_8':
@@ -1999,7 +2547,13 @@ class SHParser
 			default: return $this->int1To7($int);
 		}
 	}
-
+	
+	/**
+	 * a number between one and seven - single digits
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int1To7(&$int){
 		switch($this->nameToken()){
 			case 'INT_1':
@@ -2015,7 +2569,13 @@ class SHParser
 			default: return false;
 		}
 	}
-	
+		
+	/**
+	 * a zero number - two digit
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int00(&$int){
 		if($this->isToken('int00')){
 			$int = $this->valueToken();
@@ -2024,7 +2584,13 @@ class SHParser
 		}
 		return false;
 	}
-
+	
+	/**
+	 * a zero number - single-digit
+	 *
+	 * @param  int $int
+	 * @return bool
+	 */
 	function int0(&$int){
 		if($this->isToken('int0')){
 			$int = $this->valueToken();

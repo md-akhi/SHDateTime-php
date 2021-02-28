@@ -1,4 +1,20 @@
 ﻿<?php
+    /**
+	* 	In the name of Allah
+	*
+    * @package		Date and Time Related Extensions SH{ Shamsi Hijri, Solar Hijri, Iranian Hijri }
+    * @author		Mohammad Amanalikhani (MD Amanalikhani, MD Akhi)
+    * @link			http://git.akhi.ir/php/SHDateTime.php			(Git)
+    * @link			https://github.com/md-akhi/SHDateTime-php		(Git)
+    * @link			http://help.akhi.ir/php/SHDateTime.php			(Help)
+    * @link			https://github.com/md-akhi/SHDateTime-php/wiki 	(Help)
+    * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
+    * @version		Release: 1.0.0-alpha.1
+    */
+	
+/**
+ * SHLexerConfig
+ */
 class SHLexerConfig
 {
     /** @var TokenDefn[] */
@@ -10,7 +26,12 @@ class SHLexerConfig
 	const DOT = '\.';
 	const SPACE = "\s";
 	const UNKNOWN_CHAR = '[^'.self::SPACE.self::DOT.']';
-
+	
+	/**
+	 * tokenDefinitions
+	 *
+	 * @var array
+	 */
 	private $tokenDefinitions = [
 		
 		"DASH"  => '-',// MINUS
