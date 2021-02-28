@@ -10,7 +10,7 @@
     * @version		Release: 2.0.0-alpha.1
     */
     
-class SHDATE_CONVERT{
+class SHDate_Converter{
 	// Languages
 	const fa_IR = 'fa_IR'; //Persion	fa
 	const en_US = 'en_US'; //English	en
@@ -36,7 +36,7 @@ class SHDATE_CONVERT{
     public function __get($name) {
     } */
 
-    public static function Cnum($str,$Convert=self::LANG_WORD){
+    public static function num($str,$Convert=self::LANG_WORD){
         $en_US = SDATE_en_US::DIGIT;// array('0','1','2','3','4','5','6','7','8','9','.');
         $fa_IR = SDATE_fa_IR::DIGIT;// array('٠','١','٢','٣','۴','۵','۶','٧','٨','٩',',');
         // Languages available in the world
@@ -47,7 +47,7 @@ class SHDATE_CONVERT{
         }
         return $str;
     }
-    public static function Cword($str,$Convert=self::LANG_WORD){
+    public static function word($str,$Convert=self::LANG_WORD){
 		// array_push()
 		// EN   en_US
         $en_US=array(
@@ -82,9 +82,9 @@ class SHDATE_CONVERT{
         return $str;
     }
 }
-    function jcnum($str,$Convert='fa_IR'){
-        return SDATE_BASE_CONVERT::Cnum($str,$Convert,$dec);
-    }
+	function shnum($str,$Convert='fa_IR'){
+		return SDATE_BASE_CONVERT::Cnum($str,$Convert,$dec);
+	}
    /*  function Cwords($str,$Convert='EN'){
         return SDATE_BASE_CONVERT::Cwords($str,$Convert);
     } */
