@@ -144,25 +144,25 @@ class SHParser
 	 * @return bool
 	 */
 	function CompoundFormats(){// Localized Notations
-		if($this->CommonLogFormat()){ // dd/M/Y:HH:II:SS tspace tzcorrection
+		if($this->commonLogFormat()){ // dd/M/Y:HH:II:SS tspace tzcorrection
 			return true;
 		}
 		elseif($this->EXIF()){ //  YY:MM:DD HH:II:SS
 			return true;
 		}
-		elseif($this->IsoYearWeekDay()){ //  YY-?"W"W-?[0-7]
+		elseif($this->isoYearWeekDay()){ //  YY-?"W"W-?[0-7]
 			return true;
 		}
 		elseif($this->MySQL()){//  YY-MM-DD HH:II:SS
 			return true;
 		}
-		elseif($this->PostgreSQL()){ // YY .? doy
+		elseif($this->postgreSQL()){ // YY .? doy
 			return true;
 		}
 		elseif($this->SOAP()){ //  YY "-" MM "-" DD "T" HH ":" II ":" SS frac tzcorrection?
 			return true;
 		}
-		elseif($this->Unix_Timestamp()){ // "@" "-"? [0-9]+	
+		elseif($this->unixTimestamp()){ // "@" "-"? [0-9]+	
 			return true;
 		}
 		elseif($this->XMLRPC()){ // & (Compact) YY MM DD "T" hh :? II :? SS
@@ -171,7 +171,7 @@ class SHParser
 		elseif($this->WDDX()){ // YY "-" mm "-" dd "T" hh ":" ii ":" ss
 			return true;
 		}
-		elseif($this->MS_SQL()){// time
+		elseif($this->MSSQL()){// time
 			return true;
 		}
 		return false;
@@ -182,7 +182,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function CommonLogFormat(){
+	function commonLogFormat(){
 		$pos = $this->getPosition();
 		if($this->dayOptionalPrefix($day)){
 			if($this->isToken('SLASH')){
@@ -193,7 +193,7 @@ class SHParser
 						if($this->year4MandatoryPrefix($year)){
 							if($this->isToken('COLON')){
 								$this->nextToken();
-								if($this->hours24MandatoryPrefix($h24)){
+								if($this->hour24($h24)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
 										if($this->minutesMandatoryPrefix($min)){
@@ -241,7 +241,7 @@ class SHParser
 						$this->nextToken();
 						if($this->dayMandatoryPrefix($day)){
 							if($this->whiteSpace()){
-								if($this->hours24MandatoryPrefix($h24)){
+								if($this->hour24($h24)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
 										if($this->minutesMandatoryPrefix($min)){
@@ -276,7 +276,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function IsoYearWeekDay(){
+	function isoYearWeekDay(){
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
@@ -284,7 +284,7 @@ class SHParser
 			}
 			if($this->isToken('SIGN_WEEK')){
 				$this->nextToken();
-				if($this->week53($week)){
+				if($this->setWeekOfYear($week)){
 					if($this->isToken('DASH')){
 						$this->nextToken();
 					}
@@ -316,7 +316,7 @@ class SHParser
 						$this->nextToken();
 						if($this->dayMandatoryPrefix($day)){
 							if($this->whiteSpace()){
-								if($this->hours24MandatoryPrefix($h24)){
+								if($this->hour24($h24)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
 										if($this->minutesMandatoryPrefix($min)){
@@ -350,13 +350,13 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function PostgreSQL(){
+	function postgreSQL(){
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DOT')){
 				$this->nextToken();
 			}
-			if($this->dayOfYear($doy)){
+			if($this->setDayOfYear($doy)){
 				$this->data['YEAR'] = $year;
 				$this->data['DAY_OF_YEAR'] = $doy;
 				return true;
@@ -382,7 +382,7 @@ class SHParser
 						if($this->dayMandatoryPrefix($day)){
 							if($this->isToken('SIGN_TIME')){
 								$this->nextToken();
-								if($this->hours24MandatoryPrefix($h24)){
+								if($this->hour24($h24)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
 										if($this->minutesMandatoryPrefix($min)){
@@ -420,14 +420,14 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function Unix_Timestamp(){
+	function unixTimestamp(){
 		$pos = $this->getPosition();
 		if($this->isToken('AT')){
 			$this->nextToken();
 			if($this->signNumber($sign)){
 				$this->data['Sign_Timestamp'] = $sign;
 			}
-			if($this->Number($int)){
+			if($this->number($int)){
 				$this->data['Timestamp'] = $int;
 				return true;
 			}
@@ -449,7 +449,7 @@ class SHParser
 				if($this->dayMandatoryPrefix($day)){
 					if($this->isToken('SIGN_TIME')){
 						$this->nextToken();
-						if($this->hours12OptionalPrefix($h1t2)||$this->hours24MandatoryPrefix($h1t2)){
+						if($this->hour12($h1t2)||$this->hour24($h1t2)){
 							if($this->isToken('COLON')){
 								$this->nextToken();
 							}
@@ -492,7 +492,7 @@ class SHParser
 						if($this->dayOptionalPrefix($day)){
 							if($this->isToken('SIGN_TIME')){
 								$this->nextToken();
-								if($this->hours12OptionalPrefix($h12)){
+								if($this->hour12($h12)){
 									if($this->isToken('COLON')){
 										$this->nextToken();
 										if($this->minutesOptionalPrefix($min)){
@@ -526,9 +526,9 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function MS_SQL(){ //hh ":" II ":" SS [.:] [0-9]+ meridian  |  in Time Formats
+	function MSSQL(){ //hh ":" II ":" SS [.:] [0-9]+ meridian  |  in Time Formats
 		$pos = $this->getPosition();
-		if($this->hours12OptionalPrefix($h12)){
+		if($this->hour12($h12)){
 			if($this->isToken('COLON')){
 				$this->nextToken();
 				if($this->minutesMandatoryPrefix($min)){
@@ -537,7 +537,7 @@ class SHParser
 						if($this->secondsMandatoryPrefix($sec)){
 							if($this->isToken('DOT')||$this->isToken('COLON')){
 								$this->nextToken();
-								if($this->Number($frac)){
+								if($this->number($frac)){
 									if($this->meridian($meridian)){
 										if($meridian){
 											$this->data['HOURS'] = $h12+12;
@@ -594,7 +594,7 @@ class SHParser
 			$this->restTime();
 			return true;
 		}
-		elseif($this->minutes15SpecifiedHour()){
+		elseif($this->minutes15Hour()){
 			return true;
 		}
 		elseif($this->setDayOfMonth()){
@@ -603,12 +603,16 @@ class SHParser
 		elseif($this->setWeekDayOfMonth()){
 			return true;
 		}
-		elseif($this->handleRelativeTimeNumber()){
+		elseif($this->handleRelTimeNumber()){
 			return true;
 		}
-		elseif($this->handleRelativeTimeText()){
+		elseif($this->handleRelTimeText()){
 			return true;
-		}
+		}/*
+		elseif($this->isToken('ago')){ // Negates all the values of previously found relative time items.
+			$this->nextToken();
+			return true;
+		}*/
 		elseif($this->dayNeme($dow)){ // Moves to the next day of this name.
 			$dowmonth = $this->Date::getDayOfWeek($this->data['YEAR'] ,$this->data['MONTH'] ,$this->data['DAY']);
 			if($dow < $dowmonth){
@@ -630,14 +634,10 @@ class SHParser
 						,1)
 						+$diffdow);
 			return true;
-		}/*
-		elseif($this->isToken('ago')){ // Negates all the values of previously found relative time items.
-			$this->nextToken();
+		}
+		elseif($this->handleRelTimeFormat()){
 			return true;
 		}
-		elseif($this->handleRelativeTimeFormat()){
-			return true;
-		}*/
 		return false;
 	}
 	
@@ -647,7 +647,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function minutes15SpecifiedHour(){
+	function minutes15Hour(){
 		$pos = $this->getPosition();
 		if($this->isToken('BACK')){ // 15 minutes past the specified hour
 			$this->nextToken();
@@ -655,7 +655,7 @@ class SHParser
 				if($this->isToken('OF')){
 					$this->nextToken();
 					if($this->whiteSpace()){
-						if($this->Hour12Notation()||$this->hours24MandatoryPrefix($h24)){
+						if($this->hour12Notation()||$this->hour24($h24)){
 							if(!is_numeric($h24)){
 								$h24 = $this->data['HOURS'];
 							}
@@ -675,7 +675,7 @@ class SHParser
 				if($this->isToken('OF')){
 					$this->nextToken();
 					if($this->whiteSpace()){
-						if($this->Hour12Notation()||$this->hours24MandatoryPrefix($h24)){
+						if($this->hour12Notation()||$this->hour24($h24)){
 							if(!is_numeric($h24)){
 								$h24 = $this->data['HOURS'];
 							}
@@ -696,9 +696,9 @@ class SHParser
 	}
 	
 	/**
-	 * Sets the day of the first of the current month.		{
-	 * Sets the day to the last day of the current month.	{
-	 * { This phrase is best used together with a month name following it. }
+	 * Sets the day of the first of the current month.		=>
+	 * Sets the day to the last day of the current month.	=>
+	 * 		=> This phrase is best used together with a month name following it.
 	 *
 	 * @return bool
 	 */
@@ -867,9 +867,9 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function handleRelativeTimeNumber(){
+	function handleRelTimeNumber(){
 		$pos = $this->getPosition();
-		if($this->Number($int,$sign)){ // Handles relative time items where the value is a number.
+		if($this->number($int,$sign)){ // Handles relative time items where the value is a number.
 			if($this->whiteSpace());
 			if($this->unit($rel) || $this->isToken('WEEK')){
 				$int = intval($sign.$int);
@@ -916,7 +916,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function handleRelativeTimeText(){
+	function handleRelTimeText(){
 		$pos = $this->getPosition();
 		if($this->ordinal($int)){ // Handles relative time items where the value is text.
 			if($this->whiteSpace()){
@@ -965,7 +965,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function handleRelativeTimeFormat(){
+	function handleRelTimeFormat(){
 		$pos = $this->getPosition();
 		if($this->relText($int)){ // Handles the special format "weekday + last/this/next week".
 			if($this->whiteSpace()){
@@ -988,10 +988,10 @@ class SHParser
 	 * @return bool
 	 */
 	function TimeFormats(){// hh [.:]? II? [.:]? SS? space? meridian
-		if($this->Hour12Notation()){
+		if($this->hour12Notation()){
 			return true;
 		}
-		elseif($this->Hour24Notation()){
+		elseif($this->hour24Notation()){
 			return true;
 		}
 		return false;
@@ -1003,9 +1003,9 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function Hour12Notation(){
+	function hour12Notation(){
 		$pos = $this->getPosition();
-		if($this->hours12OptionalPrefix($h12)){
+		if($this->hour12($h12)){
 			if($this->isToken('COLON')||$this->isToken('DOT')){
 				$this->nextToken();
 				if($this->minutesMandatoryPrefix($min)){
@@ -1044,12 +1044,12 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function Hour24Notation(){// 't'? HH [.:] II [.:]? SS? (frac | (space? ( tzcorrection | tz )))
+	function hour24Notation(){// 't'? HH [.:] II [.:]? SS? (frac | (space? ( tzcorrection | tz )))
 		$pos = $this->getPosition();
 		if($this->isToken('SIGN_TIME')){
 			$this->nextToken();
 		}
-		if($this->hours24MandatoryPrefix($h24)){
+		if($this->hour24($h24)){
 			if($this->isToken('DOT')||$this->isToken('COLON')){
 				$this->nextToken();
 				if($this->minutesMandatoryPrefix($min)){
@@ -1103,13 +1103,13 @@ class SHParser
 		elseif($this->year4Date()){ 
 			return true;
 		}
-		elseif($this->yearDateOptionalPrefix()){
+		elseif($this->yearMonthAbbrDayDashes()){
 			return true;
 		}
-		elseif($this->year2DateMandatoryPrefix()){
+		elseif($this->year2MonthDay()){
 			return true;
 		}
-		elseif($this->dayDateOptionalPrefix()){
+		elseif($this->dayMonth2digit4Year()){
 			return true;
 		}
 		elseif($this->year4MandatoryPrefix($year)){
@@ -1161,19 +1161,19 @@ class SHParser
 	 * @return bool
 	 */
 	function year4Date(){
-		if($this->year4DateMonthOptionalPrefix()){ // YY "/" mm "/" dd
+		if($this->year4MonthDayDlashes()){ // YY "/" mm "/" dd
 			return true;
 		}
-		if($this->year4DateMonthMandatoryPrefix()){//ISO  YY "/"? MM "/"? DD
+		if($this->year4MonthDay()){//ISO  YY "/"? MM "/"? DD
 			return true;
 		}
-		if($this->year4DateDASH()){// YY "-" mm
+		if($this->year4MonthGNU()){// YY "-" mm
 			return true;
 		}
-		if($this->year4DateMonthTextual()){ // YY ([ \t.-])* m    Day reset to 1
+		if($this->year4TextualMonth()){ // YY ([ \t.-])* m    Day reset to 1
 			return true;
 		}
-		if($this->year4Datesign()){ // [+-]? YY "-" MM "-" DD
+		if($this->year4SignMonthDay()){ // [+-]? YY "-" MM "-" DD
 			return true;
 		}
 		return false;
@@ -1184,7 +1184,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function year4DateMonthOptionalPrefix(){ // YY "/" mm "/" dd
+	function year4MonthDayDlashes(){ // YY "/" mm "/" dd
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('SLASH')){
@@ -1211,7 +1211,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function year4DateMonthMandatoryPrefix(){ // YY "/"? MM "/"? DD
+	function year4MonthDay(){ // YY "/"? MM "/"? DD
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('SLASH')){
@@ -1238,7 +1238,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function year4DateDASH(){ // YY "-" mm
+	function year4MonthGNU(){ // YY "-" mm
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
@@ -1259,7 +1259,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function year4DateMonthTextual(){ // YY ([ \t.-])* m    Day reset to 1
+	function year4TextualMonth(){ // YY ([ \t.-])* m    Day reset to 1
 		$pos = $this->getPosition();
 		if($this->year4MandatoryPrefix($year)){
 			while($this->whiteSpace()||$this->isToken('DOT')||$this->isToken('DASH')){
@@ -1283,7 +1283,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function year4Datesign(){ // [+-]? YY "-" MM "-" DD
+	function year4SignMonthDay(){ // [+-]? YY "-" MM "-" DD
 		$pos = $this->getPosition();
 		if($this->signNumber($sign));{
 			$this->data['SIGN_DATE'] = $sign;
@@ -1314,11 +1314,11 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function yearDateOptionalPrefix(){
-		if($this->yearDateMonthOptionalPrefix()){ // y "-" mm "-" dd
+	function yearMonthAbbrDayDashes(){
+		if($this->yearMonthDayDashes()){ // y "-" mm "-" dd
 			return true;
 		}
-		elseif($this->yearDateMonthTextual()){ // y "-" M "-" DD
+		elseif($this->yearMonthAbbrDay()){ // y "-" M "-" DD
 			return true;
 		}
 		return false;
@@ -1329,7 +1329,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function yearDateMonthOptionalPrefix(){ // y "-" mm "-" dd
+	function yearMonthDayDashes(){ // y "-" mm "-" dd
 		$pos = $this->getPosition();
 		if($this->yearOptionalPrefix($year)){
 			if($this->isToken('DASH')){
@@ -1356,7 +1356,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function yearDateMonthTextual(){ // y "-" M "-" DD
+	function yearMonthAbbrDay(){ // y "-" M "-" DD
 		$pos = $this->getPosition();
 		if($this->yearOptionalPrefix($year)){
 			if($this->isToken('DASH')){
@@ -1383,7 +1383,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function year2DateMandatoryPrefix(){ // yy "-" MM "-" DD
+	function year2MonthDay(){ // yy "-" MM "-" DD
 		$pos = $this->getPosition();
 		if($this->year2MandatoryPrefix($year)){
 			if($this->isToken('DASH')){
@@ -1413,20 +1413,20 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function dayDateOptionalPrefix(){
-		if($this->dayDateYear4MandatoryPrefix()){
+	function dayMonth2digit4Year(){
+		if($this->dayMonth4Year()){
 			return true;
 		}
-		elseif($this->dayDateYear2MandatoryPrefix()){
+		elseif($this->dayMonth2Year()){
 			return true;
 		}
-		elseif($this->dayDateDayOptionalPrefix()){
+		elseif($this->dayTextualMonthYear()){
 			return true;
 		}
-		elseif($this->dayDateMonthTextual()){
+		elseif($this->textualMonth4Year()){
 			return true;
 		}
-		elseif($this->dayDateMonthTextualS()){
+		elseif($this->monthAbbrDayYear()){
 			return true;
 		}
 		return false;
@@ -1437,7 +1437,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function dayDateYear4MandatoryPrefix(){ // dd [.\t-] mm [.-] YY
+	function dayMonth4Year(){ // dd [.\t-] mm [.-] YY
 		$pos = $this->getPosition();
 		if($this->dayOptionalPrefix($day)){
 			if($this->whiteSpace()||$this->isToken('DOT')||$this->isToken('DASH')){
@@ -1466,7 +1466,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function dayDateYear2MandatoryPrefix(){ //  dd [.\t] mm "." yy
+	function dayMonth2Year(){ //  dd [.\t] mm "." yy
 		$pos = $this->getPosition();
 		if($this->dayOptionalPrefix($day)){
 			if($this->whiteSpace()||$this->isToken('DOT')){
@@ -1495,7 +1495,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function dayDateDayOptionalPrefix(){
+	function dayTextualMonthYear(){
 		$pos = $this->getPosition();
 		if($this->dayOptionalPrefix($day)){ // dd ([ \t.-])* m ([ \t.-])* y
 			while($this->whiteSpace()||$this->isToken('DOT')||$this->isToken('DASH')){
@@ -1527,7 +1527,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function dayDateMonthTextual(){
+	function textualMonth4Year(){
 		$pos = $this->getPosition();
 		if($this->monthTextualFull($month)){ // m ([ \t.-])* YY         Day reset to 1
 			while($this->whiteSpace()||$this->isToken('DOT')||$this->isToken('DASH')){
@@ -1565,7 +1565,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function dayDateMonthTextualS(){ // M "-" DD "-" y
+	function monthAbbrDayYear(){ // M "-" DD "-" y
 		$pos = $this->getPosition();
 		if($this->monthTextualShort($month)){
 			if($this->isToken('DASH')){
@@ -1626,7 +1626,7 @@ class SHParser
 	 * @param  int $int
 	 * @return bool
 	 */
-	function hours12OptionalPrefix(&$int){
+	function hour12(&$int){
 		if($this->int01To09($int)||$this->int1To9($int)||$this->int10To12($int)){
 			return true;
 		}
@@ -1640,7 +1640,7 @@ class SHParser
 	 * @param  int $int
 	 * @return bool
 	 */
-	function hours24MandatoryPrefix(&$int){
+	function hour24(&$int){
 		if($this->int01To09($int)||$this->int10To24($int)){
 			return true;
 		}
@@ -1758,7 +1758,7 @@ class SHParser
 			$this->nextToken();
 			$PLUS_DASH = true;
 		}
-		if($PLUS_DASH&&$this->hours12OptionalPrefix($h12)){
+		if($PLUS_DASH&&$this->hour12($h12)){
 			$this->data['TZ_HOURS'] = $h12;
 			if($this->isToken('COLON')){
 				$this->nextToken();
@@ -1985,7 +1985,7 @@ class SHParser
 	 * @param  int $int
 	 * @return bool
 	 */
-	function dayOfYear(&$int){
+	function setDayOfYear(&$int){
 		if($this->int00($int)||$this->int01To09($int)||$this->int10To99($int)){
 			if($this->int0($int2)||$this->int1To9($int2)){
 				$int .= $int2;
@@ -2001,7 +2001,7 @@ class SHParser
 	 * @param  int $int
 	 * @return bool
 	 */
-	function week53(&$int){
+	function setWeekOfYear(&$int){
 		if($this->int00($int)||$this->int01To09($int)||$this->int10To53($int)){
 			return true;
 		}
@@ -2014,7 +2014,7 @@ class SHParser
 	 *
 	 * @return bool
 	 */
-	function SpaceMore(){
+	function spaceMore(){
 		while($this->whiteSpace()){
 			$space = true;
 		}
@@ -2091,7 +2091,7 @@ class SHParser
 	 * @param  string $sign
 	 * @return bool
 	 */
-	function Number(&$num,&$sign){
+	function number(&$num,&$sign){
 		if($this->signNumber($sign));
 		$isInt = false;
 		while($this->int10To99($int)||$this->int00($int)||$this->int01To09($int)||$this->int0($int)||$this->int1To9($int)){
