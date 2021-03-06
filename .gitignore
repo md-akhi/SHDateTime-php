@@ -1,4 +1,5 @@
 /vendor/
+/.vscode/
 composer.lock
 z
 tests/test
@@ -8,6 +9,4 @@ tests/teamcity.txt
 tests/testdox.html
 tests/testdox.txt
 tests/testdox.xml
-.vscode/
-tests/.phpunit.result.cache
 .phpunit.result.cache
