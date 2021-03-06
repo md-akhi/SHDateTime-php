@@ -10,3 +10,4 @@ tests/testdox.txt
 tests/testdox.xml
 .vscode/
 tests/.phpunit.result.cache
+.phpunit.result.cache
