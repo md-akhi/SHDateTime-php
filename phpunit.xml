@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="vendor/autoload.php" colors="true" verbose="true" stopOnFailure="true">
 <testsuites>
-<testsuite name="unit">
-<directory>test</directory>
+<testsuite name="date">
+<directory suffix=".phpt">tests</directory>
 </testsuite>
 </testsuites>
+<logging>
+    <junit outputFile="tests/junit.xml"/>
+    <teamcity outputFile="tests/teamcity.txt"/>
+    <testdoxHtml outputFile="tests/testdox.html"/>
+    <testdoxText outputFile="tests/testdox.txt"/>
+    <testdoxXml outputFile="tests/testdox.xml"/>
+    <text outputFile="tests/logfile.txt"/>
+</logging>
 </phpunit>
