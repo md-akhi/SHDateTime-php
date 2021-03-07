@@ -29,6 +29,9 @@
 		 * 
 		 */
 		private static function getLanguage($lang=self::LANG_WORD){
+			if(!is_string($lang)){
+				throw new Exception("The value is not string");
+			}
 			switch($lang){
 				case self::fa_IR:
 				case self::en_US:
@@ -54,6 +57,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getSuffixNames($num, $LW =self::LANG_WORD){
+			if(!is_int($num)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			if(is_array($class::SUFFIX)){
 				//Calculate Ordinal suffix for the day of the month
@@ -77,6 +83,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getMeridienFullNames($H24, $LW =self::LANG_WORD){
+			if(!is_int($H24)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::MERIDIEN_FULL_NAMES[$H24>11];
 		}
@@ -89,6 +98,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getMeridienShortNames($H24, $LW =self::LANG_WORD){
+			if(!is_int($H24)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::MERIDIEN_SHORT_NAMES[$H24>11];
 		}
@@ -100,6 +112,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getMonthFullNames($jm, $LW =self::LANG_WORD){
+			if(!is_int($jm)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::MONTH_FULL_NAMES[$jm];
 		}
@@ -111,6 +126,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getMonthShortNames($jm, $LW =self::LANG_WORD){
+			if(!is_int($jm)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::MONTH_SHORT_NAMES[$jm];
 		}
@@ -122,6 +140,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getDayFullNames($jdow, $LW =self::LANG_WORD){
+			if(!is_int($jdow)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::DAY_FULL_NAMES[($jdow+self::FIRST_DAY_OF_WEEK)%7];
 		}
@@ -133,6 +154,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getDayShortNames($jdow, $LW =self::LANG_WORD){
+			if(!is_int($jdow)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::DAY_SHORT_NAMES[($jdow+self::FIRST_DAY_OF_WEEK)%7];
 		}
@@ -143,6 +167,9 @@
 		 * 
 		 */
 		protected static function getConstellationsFullNames($jm, $LW =self::LANG_WORD){//Constellations
+			if(!is_int($jm)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::CONSTELLATIONS_FULL_NAMES[$jm];
 		}
@@ -153,6 +180,9 @@
 		 * 
 		 */
 		protected static function getAnimalsFullNames($jy, $LW =self::LANG_WORD){
+			if(!is_int($jy)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::ANIMALS_FULL_NAMES[$jy%12];
 		}
@@ -163,6 +193,9 @@
 		 * 
 		 */
 		protected static function getSeasonFullNames($jm, $LW =self::LANG_WORD){
+			if(!is_int($jm)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::SEASON_FULL_NAMES[(int)($jm/3.1)];
 		}
@@ -174,6 +207,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getLeapFullNames($jleap, $LW =self::LANG_WORD){
+			if(!is_int($jleap)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::LEAP_FULL_NAMES[$jleap];
 		}
@@ -184,6 +220,9 @@
 		 * 
 		 */
 		protected static function getSolsticeFullNames($num, $solstice=false, $LW =self::LANG_WORD){
+			if(!is_int($num)){
+				throw new Exception("The value is not integer");
+			}
 			self::getClassLanguage($LW,$class);
 			return $class::SOLSTICE_FULL_NAMES[$num+$solstice];
 		}
