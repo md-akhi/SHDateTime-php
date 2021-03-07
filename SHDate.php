@@ -11,15 +11,15 @@
     */
 
 
-require_once(__DIR__."/src/SHBase.php");
+require_once("src/SHBase.php");
 
 	class SHDate extends SHDateBase {
 		
 		public static function date($format,$timestamp=false){
-			return parent::dates($format,$timestamp);
+			return parent::date($format,$timestamp);
 		}
 		public static function gmdate($format,$timestamp=false){
-			return parent::dates($format,$timestamp,true);
+			return parent::date($format,$timestamp,1);
         }
         
 		/**
@@ -31,7 +31,7 @@ require_once(__DIR__."/src/SHBase.php");
 		* @since   1.0
 		*/
 		public static function strftime($format,$timestamp=false){
-			return parent::strftimes($format,$timestamp);
+			return parent::strftime($format,$timestamp);
         }
         
 		/**
@@ -43,7 +43,7 @@ require_once(__DIR__."/src/SHBase.php");
 		* @since   1.0
 		*/
 		public static function gmstrftime($format,$timestamp=false){
-			return parent::strftimes($format,$timestamp,1);
+			return parent::strftime($format,$timestamp,1);
 		}
 
 		/**
@@ -58,7 +58,7 @@ require_once(__DIR__."/src/SHBase.php");
 		* @since   2.0
 		*/
 		public static function mktime($h=false,$i=false,$s=false,$shDay=false,$shMonth=false,$shYear=false){
-			return parent::mktimes($h,$i,$s,$shDay,$shMonth,$shYear);
+			return parent::mktime($h,$i,$s,$shDay,$shMonth,$shYear);
         }
 
         /**
@@ -74,7 +74,7 @@ require_once(__DIR__."/src/SHBase.php");
         * @since   1.0
         */
 		public static function gmmktime($h=false,$i=false,$s=false,$shYear=false,$shMonth=false,$shDay=false){
-			return parent::mktimes($h,$i,$s,$shDay,$shMonth,$shYear,true);
+			return parent::mktime($h,$i,$s,$shDay,$shMonth,$shYear,true);
         }
         
 		public static function isLeap($jy){
@@ -82,17 +82,17 @@ require_once(__DIR__."/src/SHBase.php");
         }
         
 		public static function getdate($timestamp=false){
-			return parent::getdates($timestamp);
+			return parent::getdate($timestamp);
 		}
 		public static function gmgetdate($timestamp=false){
-			return parent::getdates($timestamp,1);
+			return parent::getdate($timestamp,1);
         }
         
 		public static function timeToDate($timestamp=false){
-			return parent::timeToDates($timestamp);
+			return parent::timeToDate($timestamp);
 		}
 		public static function timeToGmdate($timestamp=false){
-			return parent::timeToGmdates($timestamp,1);
+			return parent::timeToGmdate($timestamp,1);
 		}
 	}
     class_alias("SHDate","SDate");
@@ -112,18 +112,18 @@ require_once(__DIR__."/src/SHBase.php");
         return SHDate::gmdate($format,$timestamp);
     }
 
-    function smktime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
-        return SHDate::mktime($h,$m,$s,$jd,$jm,$jy);
+    function smktime($h=false,$m=false,$s=false,$jy=false,$jm=false,$jd=false){
+        return SHDate::mktime($h,$m,$s,$jy,$jm,$jd);
     }
-    function shmktime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
-        return SHDate::mktime($h,$m,$s,$jd,$jm,$jy);
+    function shmktime($h=false,$m=false,$s=false,$jy=false,$jm=false,$jd=false){
+        return SHDate::mktime($h,$m,$s,$jy,$jm,$jd);
     }
 
-    function sgmmktime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
-        return SHDate::gmmktime($h,$m,$s,$jd,$jm,$jy);
+    function sgmmktime($h=false,$m=false,$s=false,$jy=false,$jm=false,$jd=false){
+        return SHDate::gmmktime($h,$m,$s,$jy,$jm,$jd);
     }
-    function shgmmktime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
-        return SHDate::gmmktime($h,$m,$s,$jd,$jm,$jy);
+    function shgmmktime($h=false,$m=false,$s=false,$jy=false,$jm=false,$jd=false){
+        return SHDate::gmmktime($h,$m,$s,$jy,$jm,$jd);
     }
 
 	function sstrftime($format,$timestamp=false){
@@ -243,3 +243,4 @@ require_once(__DIR__."/src/SHBase.php");
     function shmicrotime($get_as_float=false){
 		return SHDate::microtime($get_as_float);
 	}
+	
