@@ -1,7 +1,7 @@
 <?php
     /**
-	* 	In the name of Allah
-	*
+	  * 	In the name of Allah
+	  *
     * @package		Date and Time Related Extensions SH{ Shamsi Hijri, Solar Hijri, Iranian Hijri }
     * @author		Mohammad Amanalikhani (MD Amanalikhani, MD Akhi)
     * @link			http://git.akhi.ir/php/SHDateTime.php 	(Git)
