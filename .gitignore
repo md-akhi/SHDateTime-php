@@ -1,3 +1,12 @@
 /vendor/
+/.vscode/
 composer.lock
-/tests/
+z
+tests/test
+tests/junit.xml
+tests/logfile.txt
+tests/teamcity.txt
+tests/testdox.html
+tests/testdox.txt
+tests/testdox.xml
+.phpunit.result.cache
