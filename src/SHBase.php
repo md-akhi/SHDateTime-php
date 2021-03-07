@@ -7,7 +7,7 @@
     * @link			http://git.akhi.ir/php/SHDateTime/		(Git)
     * @link			http://git.akhi.ir/php/SHDateTime/docs/	(wiki)
     * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
-    * @version		Release: 2.0.0-alpha.5
+    * @version		Release: 1.0.0-alpha.5
     */
 	//require (__DIR__ . '/../vendor/autoload.php');
 	require_once(__DIR__."/Config.php");
@@ -301,7 +301,7 @@
 		* @param   string  $time  A date/time string. Valid formats are explained in Date and Time Formats.
 		* @param   int  $now  The timestamp which is used as a base for the calculation of relative dates.
 		* @return int  A timestamp on success,FALSE otherwise.
-		* @since   2.0.0-alpha.5
+		* @since   1.0.0-alpha.5
 		*/
 		public static function strtotime($time_,$now=false){
 			//	time_ = by del str step to step
@@ -818,6 +818,7 @@
 		* @param int $timestamp
 		* @param bool $tserver
 		* @return int the current time measured in the number of seconds since the Unix Epoch (January 1 1970 00:00:00 GMT).
+		* @since   1.0.0
 		*/
 		public static function time($timestamp=false,$tserver=false){
 			if(!(is_int($timestamp)||is_bool($timestamp))){
@@ -1173,7 +1174,7 @@
 		* @param   int  $leaps  leap years.
 		* @return  int  1 if it is a leap year,0 otherwise.
 		* @copyright Zya'aldyn Torabi
-		* @since   1.5.0
+		* @since   1.0.0
 		*/
 		protected static function isLeaps($year,$leaps=false){//private
 			if(!is_int($year)){
