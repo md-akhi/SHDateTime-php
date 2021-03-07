@@ -77,6 +77,9 @@
 		* @see SHDate::gmdate
 		**/
 		protected static function dates($format,$timestamp=false,$gmt=false,?DateTime $DateTime=null){
+			if(!is_string($format)){
+				throw new Exception("The value is not string");
+			}
 			$timestamp = self::time($timestamp);
 			$ftemp = 'Y=n=j=w=H=h=i=s=O=P';
 			if(is_object($DateTime))
@@ -196,6 +199,9 @@
 		* @see SHDate::gmstrftime
 		**/
 		protected static function strftimes($format,$timestamp=false,$gmt=false){
+			if(!is_string($format)){
+				throw new Exception("The value is not string");
+			}
 			$timestamp = self::time($timestamp);
 			$ftemp = '%Y=%m=%e=%w=%H=%k=%L=%l=%M=%R=%S=%T=%X=%z=%Z';
 			if($gmt)
@@ -780,27 +786,26 @@
 		* @see SHDate::gmmktime
 		*/
 		protected static function mktimes($hours=false,$minute=false,$second=false,$shDay=false,$shMonth=false,$shYear=false,$gmt=false){
-			if(!(is_numeric($hours)||is_numeric($minute)||is_numeric($second)||is_numeric($shYear)||is_numeric($shMonth)||is_numeric($shDay)))
+			if(!(is_int($hours)||is_int($minute)||is_int($second)||is_int($shYear)||is_int($shMonth)||is_int($shDay)))
 				if($gmt)
 					return gmmktime();
 				else
 					return mktime();
-			list($hours,$minute,$second,$shYear,$shMonth,$shDay) = self::intsval($hours,$minute,$second,$shYear,$shMonth,$shDay);
 			if($gmt)
 				$getdate = self::getdates(false, true);
 			else
 				$getdate = self::getdates();
-			if(!is_numeric($hours))
+			if(!is_int($hours))
 				$hours = $getdate["hours"];
-			if(!is_numeric($minute))
+			if(!is_int($minute))
 				$minute = $getdate["minutes"];
-			if(!is_numeric($second))
+			if(!is_int($second))
 				$second = $getdate["seconds"];
-			if(!is_numeric($shDay))
+			if(!is_int($shDay))
 				$shDay = $getdate["mday"];
-			if(!is_numeric($shMonth))
+			if(!is_int($shMonth))
 				$shMonth = $getdate["mon"];
-			if(!is_numeric($shYear))
+			if(!is_int($shYear))
 				$shYear = $getdate["year"];
 			list($gMonth,$gDay,$gYear) = self::solartogregorian($shYear,$shMonth,$shDay);
 			if($gmt)
@@ -815,8 +820,10 @@
 		* @return int the current time measured in the number of seconds since the Unix Epoch (January 1 1970 00:00:00 GMT).
 		*/
 		public static function time($timestamp=false,$tserver=false){
-			if(is_numeric($timestamp)){
-				$timestamp = self::intsval($timestamp);
+			if(!(is_int($timestamp)||is_bool($timestamp))){
+				throw new Exception("The value is not integer");
+			}
+			if(is_int($timestamp)){
 				if($tserver)
 					$timestamp += self::TSERVER;
 				return $timestamp;
@@ -832,6 +839,9 @@
 		* @since   1.0.0
 		*/
 		public static function idates($format,$timestamp=false){
+			if(!is_string($format)){
+				throw new Exception("The value is not string");
+			}
 			if(strlen($format)>1)return false;
 			$getdate = self::getdates($timestamp);
 			switch($format){
@@ -976,8 +986,9 @@
 		* @since   1.0.0
 		*/
 		public static function checkdates($shYear,$shMonth,$shDay){
-			if(!self::is_ints($shYear,$shMonth,$shDay))return false;
-			list($shYear,$shMonth,$shDay) = self::intsval($shYear,$shMonth,$shDay);
+			if(!(is_int($shYear)&&is_int($shMonth)&&is_int($shDay))){
+				throw new Exception("The value is not integer");
+			}
 			return !($shYear<1||$shYear>3500000||$shMonth<1||$shMonth>12||$shDay<1||$shDay>self::getDaysInMonth($shYear,$shMonth));
 		}
 
@@ -990,8 +1001,9 @@
 		* @since   1.0.0
 		*/
 		public static function checktime($hours,$minute,$second){
-			if(!self::is_ints($hours,$minute,$second))return false;
-			list($hours,$minute,$second) = self::intsval($hours,$minute,$second);
+			if(!(is_int($hours)&&is_int($minute)&&is_int($second))){
+				throw new Exception("The value is not integer");
+			}
 			return !($hours<0||$hours>23||$minute<0||$minute>59||$second<0||$second>59);
 		}
 		
@@ -1001,31 +1013,30 @@
 		*
 		*/
 		public static function dateToTimes($hours=false,$minute=false,$second=false,$shDay=false,$shMonth=false,$shYear=false, $gmt=false){
-			if(!(is_numeric($hours)||is_numeric($minute)||is_numeric($second)||is_numeric($shYear)||is_numeric($shMonth)||is_numeric($shDay)))
+			if(!(is_int($hours)||is_int($minute)||is_int($second)||is_int($shYear)||is_int($shMonth)||is_int($shDay)))
 				if($gmt)
 					return gmmktime();
 				else
 					return mktime();
-			list($hours,$minute,$second,$shDay,$shMonth,$shYear) = self::intsval($hours,$minute,$second,$shDay,$shMonth,$shYear);
 			$getdate = self::getdates(false, true);
-			if(!is_numeric($hours))
+			if(!is_int($hours))
 				$hours = $getdate['hours'];
-			if(!is_numeric($minute))
+			if(!is_int($minute))
 				$minute = $getdate['minutes'];
-			if(!is_numeric($second))
+			if(!is_int($second))
 				$second = $getdate['seconds'];
-			if(!is_numeric($shYear))
+			if(!is_int($shYear))
 				$shYear = $getdate['year'];
 			if(! ($shMonth))
 				$shMonth = $getdate['mon'];
-			if(!is_numeric($shDay))
+			if(!is_int($shDay))
 				$shDay = $getdate['mday'];
 			/*
 			*	86400 = 24*60*60
 			*	3600  = 60*60
 			*/
 			//	0	=	1348/10/11	00:00:00	=	1970/01/01	00:00:00
-			return self::intsval(((($shYear-1)*365+self::isLeaps($shYear,1)+self::getDayOfYear($shYear,$shMonth,$shDay))*86400 /* 24*60*60 */)+($hours*3600 /* 60*60 */)+($minute*60)+$second-42531868800);
+			return array(((($shYear-1)*365+self::isLeaps($shYear,1)+self::getDayOfYear($shYear,$shMonth,$shDay))*86400 /* 24*60*60 */)+($hours*3600 /* 60*60 */)+($minute*60)+$second-42531868800);
 		}
 		
 		/**
@@ -1054,7 +1065,7 @@
 			$second = $ts%60;
 			$gmmktime = self::mktimes($hours,$minute,$second,$shDay,$shMonth,(self::isLeaps($shYear)?1375:1371),true);
 			if($gmt)
-				return self::intsval($shYear,$shMonth,$shDay,$hours,$minute,$second,$timestamp,$gmmktime);
+				return array($shYear,$shMonth,$shDay,$hours,$minute,$second,$timestamp,$gmmktime);
 			$tz = date('Z',$gmmktime);
 			$timestamp += $tz;
 			$ts += $tz;
@@ -1065,7 +1076,7 @@
 			$hours = $ts/3600%24;
 			$minute = $ts/60%60;
 			$second = $ts%60;
-			return self::intsval($shYear,$shMonth,$shDay,$hours,$minute,$second,$timestamp,$gmmktime);
+			return array($shYear,$shMonth,$shDay,$hours,$minute,$second,$timestamp,$gmmktime);
 		}
 
 		/**
@@ -1077,9 +1088,10 @@
 		* @since   1.0.0
 		*/
 		protected static function gregoriantosolar($gMonth,$gDay,$gYear){
-			// new and best convert gregorian to jalali // 0622/03/22 = 0001/01/01
-			if(!self::is_ints($gMonth,$gDay,$gYear))return false;
-			//list($gMonth,$gDay,$gYear) = self::intsval($gMonth,$gDay,$gYear);
+			// 0622/03/22 = 0001/01/01
+			if(!(is_int($gMonth)&&is_int($gDay)&&is_int($gYear))){
+				throw new Exception("The value is not integer");
+			}
 			if($gMonth<1||$gDay<1||$gYear<622||($gMonth<3&&$gDay<22&&$gYear==622)) return NULL;
 			$gdoy = ($gYear-1)*365+array(0,0,31,59,90,120,151,181,212,243,273,304,334)[$gMonth]+$gDay-226745; // -0622/03/22 = 0001/01/01
 			if(self::gIsLeap($gYear)&&$gMonth>2)$gdoy++;
@@ -1097,10 +1109,10 @@
 		* @since   1.0.0
 		*/
 		protected static function solartogregorian($shYear,$shMonth,$shDay){
-			// new and best convert jalali to gregorian // 0001/01/01 = 0622/03/22
-			if(!self::is_ints($shYear,$shMonth,$shDay))return false;
-			//list($shYear,$shMonth,$shDay) = self::intsval($shYear,$shMonth,$shDay);
-			if($shYear<1||$shMonth<1||$shDay<1) return NULL;
+			// 0001/01/01 = 0622/03/22
+			if(!(is_int($shYear)&&is_int($shMonth)&&is_int($shDay))){
+				throw new Exception("The value is not integer");
+			}
 			$shdoy = ($shYear-1)*365+self::getDayOfYear($shYear,$shMonth,$shDay)+226746; // +0622/03/22 = 0001/01/01
 			$gYear = (int)($shdoy/365)+1;
 			$gdoy = $shdoy%365+self::isLeaps($shYear,1)-self::gIsLeap($gYear,1);
@@ -1164,8 +1176,10 @@
 		* @since   1.5.0
 		*/
 		protected static function isLeaps($shYear,$leaps=false){//private
-			if($shYear<1) return null;
-			elseif($leaps)
+			if(!is_int($shYear)){
+				throw new Exception("The value is not integer");
+			}
+			if($leaps)
 				return (int)(ceil((($shYear+=1127)*365.2422)-$shYear*365)-274);
 			return (bool)(((int)(($shYear+=1128)*365.2422)-(int)(--$shYear*365.2422))-365);
 		}
@@ -1179,7 +1193,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getDayOfWeek($shYear,$shMonth,$shDay,$FDOW = self::FIRST_DAY_OF_WEEK){
-			if($shYear<1||$shMonth<1||$shDay<1) return null;
+			if(!(is_int($shYear)&&is_int($shMonth)&&is_int($shDay))){
+				throw new Exception("The value is not integer");
+			}
 			//new and best version
 			//return ($shYear+self::isLeaps($shYear,1)+self::getDayOfYear($shYear,$shMonth,$shDay)+5)%7;
 			return (5+$shYear+self::isLeaps($shYear,1)+self::getDayOfYear($shYear,$shMonth,$shDay)-$FDOW)%7;
@@ -1202,8 +1218,10 @@
 		* @return  int  0 through 364|365
 		* @since   1.0.0
 		*/
-		protected static function getDayOfYear($shYear=false,$shMonth,$shDay){
-			if($shMonth<1||$shDay<1) return null;
+		protected static function getDayOfYear($shYear,$shMonth,$shDay){
+			if(!(is_int($shYear)&&is_int($shMonth)&&is_int($shDay))){
+				throw new Exception("The value is not integer");
+			}
 			return self::DAY_OF_YEAR[$shMonth]+$shDay-1;
 		}
 
@@ -1212,7 +1230,9 @@
 		*
 		*/
 		protected static function getDaysOfDay($shYear,$doy){
-			if($shYear<1) return null;
+			if(!(is_int($shYear)&&is_int($doy))){
+				throw new Exception("The value is not integer");
+			}
 			$doy++;
 			$diy = self::getDaysInYear($shYear);
 			if($doy<1)
@@ -1247,8 +1267,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getWeekOfYear($shYear,$shMonth,$shDay,$FDOW=self::FIRST_DAY_OF_WEEK){
-			// best and new calculator week of year
-			if($shYear<1||$shMonth<1||$shDay<1) return NULL;
+			if(!(is_int($shYear)&&is_int($shMonth)&&is_int($shDay))){
+				throw new Exception("The value is not integer");
+			}
 			$doy = self::getDayOfYear($shYear,$shMonth,$shDay)+1; // 1 through 365-6
 			$far1dow = self::getDayOfWeek($shYear,1,1,$FDOW)+1; // 1 through 7
 			/* Find if Y M D falls in YearNumber --Y, WeekNumber 52 or 53 */
@@ -1288,9 +1309,13 @@
 		* @since   1.0.0
 		*/
 		public static function checkweek($isoYear,$isoWeek,$isoDay=false){
-			if(!self::is_ints($isoYear,$isoWeek,$isoDay))return false;
-			list($isoYear,$isoWeek,$isoDay) = self::intsval($isoYear,$isoWeek,$isoDay);
-			if(!is_numeric($isoDay))
+			if(!(is_int($isoYear)&&is_int($isoWeek))){
+				throw new Exception("The value is not integer");
+			}
+			if(!is_int($isoDay)||!is_bool($isoDay)){
+				throw new Exception("The value is not integer");
+			}
+			if(!is_int($isoDay))
 				return !($isoYear<1||$isoYear>3500000||$isoWeek<1||$isoWeek>self::getWeeksInYear($isoYear));
 			return !($isoYear<1||$isoYear>3500000||$isoWeek<1||$isoWeek>self::getWeeksInYear($isoYear)||$isoDay<1||$isoDay>7);
 		}
@@ -1299,10 +1324,14 @@
 		*
 		*
 		*/
-		protected static function getWeekOfDay($shIsoYear,$isoWeek,$isoDay=1){
-			if($shIsoYear<1||$isoWeek<1||$isoWeek>53||$isoDay<0||$isoDay>7) return NULL;
-			$doy = ($isoWeek-1)*7+$isoDay-self::getDayOfWeek($shIsoYear,1,4)+2;
-			return self::getDaysOfDay($shIsoYear,$doy);
+		protected static function getWeekOfDay($isoYear,$isoWeek,$isoDay=1){
+			if(!(is_int($shIsoYear)&&is_int($isoWeek)&&is_int($isoDay))){
+				throw new Exception("The value is not integer");
+			}
+			if(self::checkweek($isoYear,$isoWeek,$isoDay))
+				throw new Exception("Validation of weekly values is incorrect");
+			$doy = ($isoWeek-1)*7+$isoDay-self::getDayOfWeek($isoYear,1,4)+2;
+			return self::getDaysOfDay($isoYear,$doy);
 		}
 		
 		/**
@@ -1310,6 +1339,9 @@
 		*
 		*/
 		protected static function getWeeksInYear($shYear){
+			if(!is_int($shYear)){
+				throw new Exception("The value is not integer");
+			}
 			$far1dow = self::getDayOfWeek($shYear,1,1)+1;
 			if($far1dow==4||($far1dow==3&&self::isLeaps($shYear)))
 				return 53; // self::Weeks_In_Year_LEAP
@@ -1323,6 +1355,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getDaysInMonth($shYear,$shMonth){
+			if(!(is_int($shYear)&&is_int($shMonth))){
+				throw new Exception("The value is not integer");
+			}
 			if($shYear<1||$shMonth<1||$shMonth>12) return NULL;
 			if(self::isLeaps($shYear))
 				return self::DAYS_IN_MONTH_LEAP[$shMonth];
@@ -1336,7 +1371,9 @@
 		* @since   1.0.0
 		*/
 		protected static function getDaysInYear($shYear){
-			if($shYear<1) return NULL;
+			if(!is_int($shYear)){
+				throw new Exception("The value is not integer");
+			}
 			if(self::isLeaps($shYear))
 				return self::DAYS_IN_YEAR_LEAP;
 			return self::DAYS_IN_YEAR;
@@ -1357,6 +1394,9 @@
 		*
 		*/
 		protected static function getMillesimal($shYear){//1000
+			if(!is_int($shYear)){
+				throw new Exception("The value is not integer");
+			}
 			if(!($shYear%1000))
 				return (int)($shYear/1000);
 			return (int)($shYear/1000)+1;
@@ -1367,6 +1407,9 @@
 		*
 		*/
 		protected static function getCentury($shYear){//100
+			if(!is_int($shYear)){
+				throw new Exception("The value is not integer");
+			}
 			if(!($shYear%100))
 				return (int)($shYear/100);
 			return (int)($shYear/100)+1;
@@ -1377,6 +1420,9 @@
 		*
 		*/
 		protected static function getDecade($shYear){//10
+			if(!is_int($shYear)){
+				throw new Exception("The value is not integer");
+			}
 			if(!($shYear%10))
 				return (int)((($shYear-1)%100)/10+1);
 			return (int)(($shYear%100)/10);
@@ -1388,42 +1434,6 @@
 		*/
 		protected static function getSeason($shMonth){//4
 			return (int)($shMonth/3.1)+1;
-		}
-		
-		/**
-		*
-		*
-		*/
-		protected static function intsval(...$args){
-			//$args = func_get_args();
-			if(is_array($args[0]))
-				$args=$args[0];
-			foreach ($args as $i=>$var){
-				if(is_numeric($var)&&!is_int($var)){
-					$args[$i] = "$var"+0;
-					/* if(is_int($var))
-						$args[$i] = $var;
-					elseif($var>PHP_INT_MAX||$var<PHP_INT_MIN||(bool)explode('.',$var)[1])
-						$args[$i] = (float)$var; */
-				}
-			}
-			if(count($args)>1)
-				return $args;
-			return $args[0];
-		}
-
-		/**
-		*
-		*
-		*/
-		protected static function is_ints(...$args){
-			//$args = func_get_args();
-			// if(is_array($args[0]))
-				// $args=$args[0];
-			foreach ($args as $var)
-				if (!is_int($var))
-					return false;
-			return true;
 		}
 
 	}
