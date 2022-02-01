@@ -1,18 +1,17 @@
 <?php
     /**
-	* 	In the name of Allah
+	* In the name of Allah, the Beneficent, the Merciful.
 	*
     * @package		Date and Time Related Extensions - SH(Solar Hijri, Shamsi Hijri, Iranian Hijri)
-    * @author		Mohammad Amanalikhani (MD Amanalikhani, MD Akhi)
+    * @author		Mohammad Amanalikhani <md.akhi.ir@gmail.com>
     * @link			http://git.akhi.ir/php/SHDateTime/		(Git)
-    * @link			http://git.akhi.ir/php/SHDateTime/help/	(Help)
+    * @link			http://git.akhi.ir/php/SHDateTime/docs/	(wiki)
     * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
-    * @version		Release: 2.0.0-alpha.1
+    * @version		Release: 1.0.0-alpha.5
     */
 	
     /**
     *	The time difference with the server
-	*	اختلاف زمان با سرور ±
     */
     define("SHDATE_TSERVER", 0);
     /**
