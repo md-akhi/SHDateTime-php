@@ -1,7 +1,11 @@
 {
     "name": "md-akhi/shdatetime",
     "description": "Solar Hijri Date / Time",
-    "authors": [
+    "scripts": {
+        "test": "./vendor/bin/phpunit tests",
+        "test:dox": "./vendor/bin/phpunit --testdox tests"
+    },
+    "author": [
         {
             "name": "Mohammad Amanalikhani",
             "email": "md.akhi.ir@gmail.com",
