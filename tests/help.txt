@@ -1,0 +1,16 @@
+https://qa.php.net/phpt_details.php
+
+
+
+
+
+composer dump-autoload
+
+
+
+
+./vendor/bin/phpunit tests
+
+
+
+./vendor/bin/phpunit --testdox tests
