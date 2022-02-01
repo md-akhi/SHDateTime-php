@@ -4,8 +4,7 @@
 	*
     * @package		Date and Time Related Extensions - SH(Solar Hijri, Shamsi Hijri, Iranian Hijri)
     * @author		Mohammad Amanalikhani <md.akhi.ir@gmail.com>
-    * @link			http://git.akhi.ir/php/SHDateTime/		(Git)
-    * @link			http://git.akhi.ir/php/SHDateTime/docs/	(wiki)
+    * @link			http://docs.akhi.ir/php/SHDateTime
     * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
     * @version		Release: 1.0.0-alpha.5
     */
@@ -1435,5 +1434,4 @@
 		}
 
 	}
-    class_alias("SHDateBase","SDateBase");
 

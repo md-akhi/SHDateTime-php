@@ -9,5 +9,5 @@ tests/testdox.html
 tests/testdox.txt
 tests/testdox.xml
 .phpunit.result.cache
-/node_modules/
+node_modules/
 package-lock.json
