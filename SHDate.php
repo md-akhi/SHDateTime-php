@@ -95,48 +95,28 @@ require_once(__DIR__."/src/SHBase.php");
 			return parent::timeToGmdates($timestamp,1);
 		}
 	}
-    class_alias("SHDate","SDate");
 
 
-    function sdate($format,$timestamp=false){
-        return SHDate::date($format,$timestamp);
-    }
     function shdate($format,$timestamp=false){
         return SHDate::date($format,$timestamp);
     }
 
-    function sgmdate($format,$timestamp=false){
-        return SHDate::gmdate($format,$timestamp);
-    }
-    function shgmdate($format,$timestamp=false){
+    function gmshdate($format,$timestamp=false){
         return SHDate::gmdate($format,$timestamp);
     }
 
-    function smktime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
+    function mkshtime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
         return SHDate::mktime($h,$m,$s,$jd,$jm,$jy);
     }
-    function shmktime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
-        return SHDate::mktime($h,$m,$s,$jd,$jm,$jy);
-    }
-
-    function sgmmktime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
-        return SHDate::gmmktime($h,$m,$s,$jd,$jm,$jy);
-    }
-    function shgmmktime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
+    function gmmkshtime($h=false,$m=false,$s=false,$jd=false,$jm=false,$jy=false){
         return SHDate::gmmktime($h,$m,$s,$jd,$jm,$jy);
     }
 
-	function sstrftime($format,$timestamp=false){
-		return SHDate::strftime($format,$timestamp);
-	}
-	function shstrftime($format,$timestamp=false){
+	function strfshtime($format,$timestamp=false){
 		return SHDate::strftime($format,$timestamp);
     }
     
-	function sgmstrftime($format,$timestamp=false){
-		return SHDate::gmstrftime($format,$timestamp);
-	}
-	function shgmstrftime($format,$timestamp=false){
+	function gmstrfshtime($format,$timestamp=false){
 		return SHDate::gmstrftime($format,$timestamp);
 	}
    /**
@@ -145,17 +125,11 @@ require_once(__DIR__."/src/SHBase.php");
     * @return  array  an associative array of information related to the timestamp.
     * @since   1.0
     */
-	function sgetdate($timestamp=false){
-		return SHDate::getdate($timestamp);
-    }
-	function shgetdate($timestamp=false){
+	function getshdate($timestamp=false){
 		return SHDate::getdate($timestamp);
     }
 
-	function sgmgetdate($timestamp=false){
-		return SHDate::gmgetdate($timestamp);
-    }
-	function shgmgetdate($timestamp=false){
+	function gmgetshdate($timestamp=false){
 		return SHDate::gmgetdate($timestamp);
     }
 
@@ -166,10 +140,7 @@ require_once(__DIR__."/src/SHBase.php");
     * @return  array  Numerically indexed array or associative array containing all.
     * @since   1.0
     */
-	function slocaltime($timestamp=false,$is_associative=false){
-		return SHDate::localtime($timestamp,$is_associative);
-    }
-	function shlocaltime($timestamp=false,$is_associative=false){
+	function localshtime($timestamp=false,$is_associative=false){
 		return SHDate::localtime($timestamp,$is_associative);
     }
 
@@ -179,17 +150,11 @@ require_once(__DIR__."/src/SHBase.php");
     * @return  array  By default an array. If return_float is set,then a float.
     * @since   1.0
     */
-	function sgettimeofday($return_float=false){
-		return SHDate::gettimeofday($return_float);
-    }
-	function shgettimeofday($return_float=false){
+	function getshtimeofday($return_float=false){
 		return SHDate::gettimeofday($return_float);
     }
 
-    function scheckdate($jy,$jm,$jd){
-		return SHDate::checkdate($jy,$jm,$jd);
-    }
-    function shcheckdate($jy,$jm,$jd){
+    function checkshdate($jy,$jm,$jd){
 		return SHDate::checkdate($jy,$jm,$jd);
     }
 	/**
@@ -203,17 +168,11 @@ require_once(__DIR__."/src/SHBase.php");
 	function checktime($h,$i,$s){
 		return SHDate::checktime($h,$i,$s);
     }
-	function schecktime($h,$i,$s){
-		return SHDate::checktime($h,$i,$s);
-    }
-	function shchecktime($h,$i,$s){
+	function checkshtime($h,$i,$s){
 		return SHDate::checktime($h,$i,$s);
     }
     
-    function sstrtotime($time,$now=false){
-		return SHDate::strtotime($time,$now);
-    }
-    function shstrtotime($time,$now=false){
+    function strtoshtime($time,$now=false){
 		return SHDate::strtotime($time,$now);
     }
 	/**
@@ -223,23 +182,14 @@ require_once(__DIR__."/src/SHBase.php");
     *                                                In other words,it defaults to the value of jtime().@return int  an integer.
     * @since   1.0
     */
-	function sidate($format,$timestamp=false){
-		return SHDate::idate($format,$timestamp);
-    }
-	function shidate($format,$timestamp=false){
+	function ishdate($format,$timestamp=false){
 		return SHDate::idate($format,$timestamp);
     }
     
-    function stime($timestamp=false){
-		return SHDate::time($timestamp);
-	}
     function shtime($timestamp=false){
 		return SHDate::time($timestamp);
     }
     
-    function smicrotime($get_as_float=false){
-		return SHDate::microtime($get_as_float);
-	}
-    function shmicrotime($get_as_float=false){
+    function microshtime($get_as_float=false){
 		return SHDate::microtime($get_as_float);
 	}

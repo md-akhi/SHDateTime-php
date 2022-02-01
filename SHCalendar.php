@@ -165,40 +165,21 @@
 		}
 	}
 
-    class_alias("SHCalendar","SCalendar");
 
-    function sjddayofweek($julianday,$mode=CAL_DOW_DAYNO){
+    function jdshdayofweek($julianday,$mode=CAL_DOW_DAYNO){
         return SHCalendar::jddayofweek($julianday,$mode);
-    }
-    function shjddayofweek($julianday,$mode=CAL_DOW_DAYNO){
-        return SHCalendar::jddayofweek($julianday,$mode);
-    }
-    function scal_from_jd($jd,$calendar){
-        return SHCalendar::cal_from_jd($jd,$calendar=CAL_SOLAR);
     }
     function shcal_from_jd($jd,$calendar){
         return SHCalendar::cal_from_jd($jd,$calendar=CAL_SOLAR);
     }
-    function scal_to_jd($calendar,$y,$m,$d){
-		return SHCalendar::cal_to_jd($calendar=CAL_SOLAR,$m,$d,$y);
-    }
     function shcal_to_jd($calendar,$y,$m,$d){
 		return SHCalendar::cal_to_jd($calendar=CAL_SOLAR,$m,$d,$y);
-    }
-    function scal_days_in_month($calendar=CAL_SOLAR,$y,$m){
-		return SHCalendar::cal_days_in_month($calendar,$m,$y);
     }
     function shcal_days_in_month($calendar=CAL_SOLAR,$y,$m){
 		return SHCalendar::cal_days_in_month($calendar,$m,$y);
     }
-    function sjdmonthname($julianday,$mode=CAL_MONTH_SOLAR_LONG){
+    function jdshmonthname($julianday,$mode=CAL_MONTH_SOLAR_LONG){
 		return SHCalendar::jdmonthname($julianday,$mode);
-    }
-    function shjdmonthname($julianday,$mode=CAL_MONTH_SOLAR_LONG){
-		return SHCalendar::jdmonthname($julianday,$mode);
-    }
-    function scal_info($calendar=-1){
-        return SHCalendar::cal_info($calendar);
     }
     function shcal_info($calendar=-1){
         return SHCalendar::cal_info($calendar);
