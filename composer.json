@@ -3,7 +3,8 @@
     "description": "Solar Hijri Date / Time",
     "scripts": {
         "test": "./vendor/bin/phpunit tests",
-        "test:dox": "./vendor/bin/phpunit --testdox tests"
+        "test:dox": "./vendor/bin/phpunit --testdox tests",
+        "cs:fix": "tools/php-cs-fixer/vendor/bin/php-cs-fixer fix src"
     },
     "author": [
         {
