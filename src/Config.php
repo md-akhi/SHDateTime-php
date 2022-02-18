@@ -7,7 +7,7 @@
     * @link			http://git.akhi.ir/php/SHDateTime/		(Git)
     * @link			http://git.akhi.ir/php/SHDateTime/docs/	(wiki)
     * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
-    * @version		Release: 1.0.0-alpha.5
+    * @version		Release: 1.0.0
     */
 	
     /**
@@ -21,8 +21,8 @@
 	// Set Default TimeZone
     date_default_timezone_set(SHDATE_TZONE);
 	
-	$_SERVER['REQUEST_STIME']= $_SERVER['REQUEST_SHTIME']= $_SERVER['REQUEST_TIME']+SHDATE_TSERVER;
-	$_SERVER['REQUEST_STIME_FLOAT'] = $_SERVER['REQUEST_SHTIME_FLOAT'] = $_SERVER['REQUEST_TIME_FLOAT']+SHDATE_TSERVER;
+	$_SERVER['REQUEST_SHTIME']= $_SERVER['REQUEST_TIME']+SHDATE_TSERVER;
+	$_SERVER['REQUEST_SHTIME_FLOAT'] = $_SERVER['REQUEST_TIME_FLOAT']+SHDATE_TSERVER;
     /**
     *    Language words Software
     */

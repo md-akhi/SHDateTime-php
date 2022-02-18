@@ -7,7 +7,7 @@
     * @link			http://git.akhi.ir/php/SHDateTime/		(Git)
     * @link			http://git.akhi.ir/php/SHDateTime/docs/	(wiki)
     * @license		https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
-    * @version		Release: 1.0.0-alpha.5
+    * @version		Release: 1.0.0
     */
 	
 	require_once(__DIR__."/en_US.php");
@@ -24,9 +24,10 @@
 		const FIRST_DAY_OF_WEEK = SHDATE_FIRST_DAY_OF_WEEK;
 
 		/**
-		 * 
-		 * 
-		 * 
+		 * Get Language
+		 * @param string lang 
+		 * @return  string  
+		 * @since   1.0.0
 		 */
 		private static function getLanguage($lang=self::LANG_WORD){
 			if(!is_string($lang)){
@@ -42,8 +43,10 @@
 		}
 		
 		/**
-		 * 
-		 * 
+		 * Get Class Language
+		 * @param string lang
+		 * @param pointer class
+		 * @return string 
 		 * 
 		 */
 		protected static function getClassLanguage($lang=self::LANG_WORD,&$class = false){

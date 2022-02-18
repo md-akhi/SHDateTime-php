@@ -350,7 +350,7 @@
 		* Return current Unix timestamp
 		* @param int $timestamp
 		* @param bool $tserver
-		* @return int the current time measured in the number of seconds since the Unix Epoch (January 1 1970 00:00:00 GMT).
+		* @return int the current time measured in the number of seconds since the Unix Epoch (11 Dey 1348 00:00:00 GMT).
 		*/
 		public static function time($timestamp=false,$tserver=false){
 			if(!(is_int($timestamp)||is_bool($timestamp))){
