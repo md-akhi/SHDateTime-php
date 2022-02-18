@@ -816,8 +816,7 @@
 		* Return current Unix timestamp
 		* @param int $timestamp
 		* @param bool $tserver
-		* @return int the current time measured in the number of seconds since the Unix Epoch (January 1 1970 00:00:00 GMT).
-		* @since   1.0.0
+		* @return int the current time measured in the number of seconds since the Unix Epoch (11 Dey 1348 00:00:00 GMT).
 		*/
 		public static function time($timestamp=false,$tserver=false){
 			if(!(is_int($timestamp)||is_bool($timestamp))){
@@ -1196,8 +1195,8 @@
 			if(!(is_int($year)&&is_int($month)&&is_int($day))){
 				throw new Exception("The value is not integer");
 			}
-			//new and best version
 			//return ($year+self::isLeaps($year,1)+self::getDayOfYear($year,$month,$day)+5)%7;
+			//new and best version
 			return (5+$year+self::isLeaps($year,1)+self::getDayOfYear($year,$month,$day)-$FDOW)%7;
 		}
 		
