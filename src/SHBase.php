@@ -646,7 +646,7 @@
 			if(self::gIsLeap($gYear)&&$gMonth>2)$gdoy++;
 			$shYear = (int)($gdoy/365)+1;
 			$shdoy = $gdoy%365+self::gIsLeap($gYear,1)-self::isLeaps($shYear,1);
-			return self::getDaysOfDay($shYear,$shdoy-1);
+			return self::getDaysOfDay($shYear,(int)($shdoy-1));
 		}
 
 		/**
